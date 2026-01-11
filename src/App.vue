@@ -48,14 +48,9 @@ function closeSettingsModal() {
 
 <template>
   <div class="h-full flex flex-col">
-    <!-- Window Title Bar -->
-    <div class="h-8 bg-gray-200 flex items-center px-3 drag-region">
-      <div class="flex gap-2">
-        <div class="w-3 h-3 rounded-full bg-red-500"></div>
-        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-        <div class="w-3 h-3 rounded-full bg-green-500"></div>
-      </div>
-      <div class="flex-1 text-center text-sm text-gray-600">
+    <!-- Window Title Bar (drag region for hiddenInset style) -->
+    <div class="h-8 bg-gray-200 flex items-center justify-center drag-region">
+      <div class="text-sm text-gray-600">
         {{ terminalStore.cwd }}
       </div>
     </div>
