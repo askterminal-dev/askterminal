@@ -34,6 +34,10 @@
   "build": {
     "appId": "dev.askterminal.app",
     "productName": "Ask Terminal",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "build/icon.icns"
