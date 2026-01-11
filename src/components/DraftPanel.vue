@@ -120,8 +120,22 @@ async function runCommand() {
   }, 50)
 }
 
+// Send Ctrl+C interrupt signal to PTY
+async function sendInterrupt() {
+  // ASCII 3 is Ctrl+C (ETX - End of Text)
+  await window.electron.pty.write('\x03')
+  inputRef.value?.focus()
+}
+
 // Handle keyboard shortcuts
 async function handleKeydown(e: KeyboardEvent) {
+  // Ctrl+C to send interrupt
+  if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault()
+    sendInterrupt()
+    return
+  }
+
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()
     runCommand()
@@ -204,6 +218,13 @@ watch(inputRef, (el) => {
         @keydown="handleKeydown"
         :disabled="terminalStore.isRunning"
       />
+      <button
+        @click="sendInterrupt"
+        class="px-3 py-2 bg-gray-200 text-gray-600 rounded-md font-medium hover:bg-gray-300 transition-colors"
+        title="Send Ctrl+C to stop running process"
+      >
+        Stop
+      </button>
       <button
         @click="runCommand"
         :disabled="!terminalStore.draftCommand.trim() || terminalStore.isRunning"
