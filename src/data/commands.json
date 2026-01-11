@@ -1,0 +1,362 @@
+{
+  "ls": {
+    "description": "List files in a directory",
+    "safety": "safe",
+    "flags": {
+      "-l": "long format with details",
+      "-a": "include hidden files",
+      "-la": "all files with details",
+      "-lh": "details with human-readable sizes",
+      "-R": "recursive listing",
+      "-t": "sort by modification time",
+      "-S": "sort by size"
+    }
+  },
+  "cd": {
+    "description": "Change directory",
+    "safety": "safe",
+    "flags": {}
+  },
+  "pwd": {
+    "description": "Print current working directory",
+    "safety": "safe",
+    "flags": {}
+  },
+  "cat": {
+    "description": "Display file contents",
+    "safety": "safe",
+    "flags": {
+      "-n": "show line numbers"
+    }
+  },
+  "echo": {
+    "description": "Print text to the terminal",
+    "safety": "safe",
+    "flags": {
+      "-n": "no trailing newline",
+      "-e": "interpret escape sequences"
+    }
+  },
+  "mkdir": {
+    "description": "Create a new directory",
+    "safety": "moderate",
+    "flags": {
+      "-p": "create parent directories as needed"
+    }
+  },
+  "touch": {
+    "description": "Create an empty file or update timestamp",
+    "safety": "moderate",
+    "flags": {}
+  },
+  "cp": {
+    "description": "Copy files or directories",
+    "safety": "moderate",
+    "flags": {
+      "-r": "copy directories recursively",
+      "-i": "prompt before overwriting",
+      "-v": "verbose output"
+    }
+  },
+  "mv": {
+    "description": "Move or rename files",
+    "safety": "moderate",
+    "flags": {
+      "-i": "prompt before overwriting",
+      "-v": "verbose output"
+    }
+  },
+  "rm": {
+    "description": "Remove files or directories",
+    "safety": "dangerous",
+    "flags": {
+      "-r": "remove directories recursively",
+      "-f": "force removal without confirmation",
+      "-rf": "force recursive removal (very dangerous)",
+      "-i": "prompt before each removal"
+    }
+  },
+  "rmdir": {
+    "description": "Remove empty directories",
+    "safety": "moderate",
+    "flags": {}
+  },
+  "head": {
+    "description": "Show first lines of a file",
+    "safety": "safe",
+    "flags": {
+      "-n": "number of lines to show"
+    }
+  },
+  "tail": {
+    "description": "Show last lines of a file",
+    "safety": "safe",
+    "flags": {
+      "-n": "number of lines to show",
+      "-f": "follow file changes in real-time"
+    }
+  },
+  "grep": {
+    "description": "Search for patterns in text",
+    "safety": "safe",
+    "flags": {
+      "-i": "case insensitive search",
+      "-r": "recursive search",
+      "-n": "show line numbers",
+      "-v": "invert match (show non-matching lines)",
+      "-c": "count matches only"
+    }
+  },
+  "find": {
+    "description": "Search for files by name or attributes",
+    "safety": "safe",
+    "flags": {
+      "-name": "search by filename pattern",
+      "-type": "filter by type (f=file, d=directory)",
+      "-size": "filter by size",
+      "-mtime": "filter by modification time"
+    }
+  },
+  "wc": {
+    "description": "Count lines, words, and characters",
+    "safety": "safe",
+    "flags": {
+      "-l": "count lines only",
+      "-w": "count words only",
+      "-c": "count bytes only"
+    }
+  },
+  "sort": {
+    "description": "Sort lines of text",
+    "safety": "safe",
+    "flags": {
+      "-r": "reverse order",
+      "-n": "numeric sort",
+      "-u": "unique lines only"
+    }
+  },
+  "uniq": {
+    "description": "Filter or count repeated lines",
+    "safety": "safe",
+    "flags": {
+      "-c": "prefix lines with occurrence count",
+      "-d": "only show duplicates"
+    }
+  },
+  "chmod": {
+    "description": "Change file permissions",
+    "safety": "dangerous",
+    "flags": {
+      "-R": "apply recursively",
+      "+x": "add execute permission",
+      "-x": "remove execute permission"
+    }
+  },
+  "chown": {
+    "description": "Change file ownership",
+    "safety": "dangerous",
+    "flags": {
+      "-R": "apply recursively"
+    }
+  },
+  "sudo": {
+    "description": "Run command as administrator",
+    "safety": "dangerous",
+    "flags": {
+      "-i": "start interactive root shell",
+      "-u": "run as specified user"
+    }
+  },
+  "man": {
+    "description": "Show manual page for a command",
+    "safety": "safe",
+    "flags": {}
+  },
+  "which": {
+    "description": "Show location of a command",
+    "safety": "safe",
+    "flags": {}
+  },
+  "whoami": {
+    "description": "Show current username",
+    "safety": "safe",
+    "flags": {}
+  },
+  "date": {
+    "description": "Show or set system date and time",
+    "safety": "safe",
+    "flags": {}
+  },
+  "cal": {
+    "description": "Display a calendar",
+    "safety": "safe",
+    "flags": {}
+  },
+  "clear": {
+    "description": "Clear the terminal screen",
+    "safety": "safe",
+    "flags": {}
+  },
+  "history": {
+    "description": "Show command history",
+    "safety": "safe",
+    "flags": {}
+  },
+  "df": {
+    "description": "Show disk space usage",
+    "safety": "safe",
+    "flags": {
+      "-h": "human-readable sizes"
+    }
+  },
+  "du": {
+    "description": "Show directory space usage",
+    "safety": "safe",
+    "flags": {
+      "-h": "human-readable sizes",
+      "-s": "show total only",
+      "--max-depth": "limit directory depth"
+    }
+  },
+  "ps": {
+    "description": "Show running processes",
+    "safety": "safe",
+    "flags": {
+      "aux": "show all processes with details",
+      "-ef": "show all processes (full format)"
+    }
+  },
+  "top": {
+    "description": "Monitor system processes in real-time",
+    "safety": "safe",
+    "flags": {}
+  },
+  "kill": {
+    "description": "Terminate a process",
+    "safety": "dangerous",
+    "flags": {
+      "-9": "force kill (SIGKILL)",
+      "-15": "graceful termination (SIGTERM)"
+    }
+  },
+  "killall": {
+    "description": "Kill processes by name",
+    "safety": "dangerous",
+    "flags": {
+      "-9": "force kill"
+    }
+  },
+  "ping": {
+    "description": "Test network connectivity",
+    "safety": "safe",
+    "flags": {
+      "-c": "number of pings to send"
+    }
+  },
+  "curl": {
+    "description": "Transfer data from or to a server",
+    "safety": "safe",
+    "flags": {
+      "-o": "save output to file",
+      "-O": "save with remote filename",
+      "-L": "follow redirects",
+      "-v": "verbose output"
+    }
+  },
+  "wget": {
+    "description": "Download files from the web",
+    "safety": "moderate",
+    "flags": {
+      "-O": "save as filename",
+      "-q": "quiet mode"
+    }
+  },
+  "ssh": {
+    "description": "Connect to remote server securely",
+    "safety": "moderate",
+    "flags": {
+      "-i": "use identity file (private key)",
+      "-p": "specify port"
+    }
+  },
+  "scp": {
+    "description": "Copy files to/from remote server",
+    "safety": "moderate",
+    "flags": {
+      "-r": "copy directories recursively",
+      "-P": "specify port"
+    }
+  },
+  "tar": {
+    "description": "Archive files",
+    "safety": "moderate",
+    "flags": {
+      "-c": "create archive",
+      "-x": "extract archive",
+      "-v": "verbose output",
+      "-f": "specify filename",
+      "-z": "use gzip compression",
+      "-cvzf": "create compressed archive",
+      "-xvzf": "extract compressed archive"
+    }
+  },
+  "zip": {
+    "description": "Create compressed archive",
+    "safety": "moderate",
+    "flags": {
+      "-r": "include directories recursively"
+    }
+  },
+  "unzip": {
+    "description": "Extract compressed archive",
+    "safety": "moderate",
+    "flags": {
+      "-l": "list contents only",
+      "-d": "extract to directory"
+    }
+  },
+  "nano": {
+    "description": "Simple text editor",
+    "safety": "moderate",
+    "flags": {}
+  },
+  "vim": {
+    "description": "Advanced text editor",
+    "safety": "moderate",
+    "flags": {}
+  },
+  "code": {
+    "description": "Open in Visual Studio Code",
+    "safety": "safe",
+    "flags": {
+      ".": "open current directory"
+    }
+  },
+  "open": {
+    "description": "Open file or URL (macOS)",
+    "safety": "safe",
+    "flags": {
+      "-a": "open with specific application"
+    }
+  },
+  "exit": {
+    "description": "Exit the terminal session",
+    "safety": "safe",
+    "flags": {}
+  },
+  "env": {
+    "description": "Show environment variables",
+    "safety": "safe",
+    "flags": {}
+  },
+  "export": {
+    "description": "Set environment variable",
+    "safety": "moderate",
+    "flags": {}
+  },
+  "alias": {
+    "description": "Create command shortcut",
+    "safety": "safe",
+    "flags": {}
+  }
+}

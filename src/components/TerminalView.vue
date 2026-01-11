@@ -1,0 +1,95 @@
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import { Terminal } from '@xterm/xterm'
+import { FitAddon } from '@xterm/addon-fit'
+import '@xterm/xterm/css/xterm.css'
+
+const terminalContainer = ref<HTMLDivElement | null>(null)
+let terminal: Terminal | null = null
+let fitAddon: FitAddon | null = null
+
+onMounted(() => {
+  if (!terminalContainer.value) return
+
+  // Create terminal
+  terminal = new Terminal({
+    cursorBlink: true,
+    fontSize: 14,
+    fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+    theme: {
+      background: '#111827',
+      foreground: '#e5e7eb',
+      cursor: '#22c55e',
+      cursorAccent: '#111827',
+      selectionBackground: '#374151'
+    }
+  })
+
+  // Add fit addon
+  fitAddon = new FitAddon()
+  terminal.loadAddon(fitAddon)
+
+  // Open terminal in container
+  terminal.open(terminalContainer.value)
+  fitAddon.fit()
+
+  // Listen for PTY data
+  window.electron.pty.onData((data) => {
+    terminal?.write(data)
+  })
+
+  window.electron.pty.onExit((code) => {
+    terminal?.write(`\r\n[Process exited with code ${code}]\r\n`)
+  })
+
+  // Handle resize
+  const resizeObserver = new ResizeObserver(() => {
+    fitAddon?.fit()
+    if (terminal) {
+      window.electron.pty.resize(terminal.cols, terminal.rows)
+    }
+  })
+  resizeObserver.observe(terminalContainer.value)
+
+  // Store resize observer for cleanup
+  ;(terminalContainer.value as any)._resizeObserver = resizeObserver
+})
+
+onUnmounted(() => {
+  window.electron.pty.removeAllListeners()
+  terminal?.dispose()
+  if (terminalContainer.value) {
+    const observer = (terminalContainer.value as any)._resizeObserver
+    observer?.disconnect()
+  }
+})
+
+// Expose method to write to terminal
+function writeToTerminal(data: string) {
+  terminal?.write(data)
+}
+
+defineExpose({ writeToTerminal })
+</script>
+
+<template>
+  <div
+    ref="terminalContainer"
+    class="h-full w-full bg-terminal-bg"
+  ></div>
+</template>
+
+<style scoped>
+.bg-terminal-bg {
+  background-color: #111827;
+}
+
+:deep(.xterm) {
+  height: 100%;
+  padding: 8px;
+}
+
+:deep(.xterm-viewport) {
+  overflow-y: auto !important;
+}
+</style>
