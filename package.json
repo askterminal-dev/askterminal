@@ -36,11 +36,24 @@
     "productName": "Ask Terminal",
     "files": [
       "dist/**/*",
+      "!dist/mac-arm64/**",
+      "!dist/*.dmg",
+      "!dist/*.zip",
+      "!dist/*.blockmap",
+      "!dist/*.yaml",
       "dist-electron/**/*"
     ],
     "mac": {
       "category": "public.app-category.developer-tools",
-      "icon": "build/icon.icns"
+      "icon": "build/icon.icns",
+      "identity": "Greg Elin (29N25H78FA)",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": {
+        "teamId": "29N25H78FA"
+      }
     },
     "win": {
       "icon": "build/icon.icns"
