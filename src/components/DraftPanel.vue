@@ -19,6 +19,9 @@ const suggestions = ref<string[]>([])
 const showConfirmDialog = ref(false)
 const pendingCommand = ref('')
 
+// Suggested commands for empty state
+const suggestedCommands = ['ls', 'pwd', 'cd ~', 'echo "hello"', 'cat', 'mkdir']
+
 // Parse the current command
 const commandInfo = computed<CommandInfo | null>(() => {
   if (!terminalStore.draftCommand.trim()) return null
@@ -186,8 +189,22 @@ function onCancel() {
   inputRef.value?.focus()
 }
 
+// Send Ctrl+C interrupt signal to PTY
+async function sendInterrupt() {
+  // ASCII 3 is Ctrl+C (ETX - End of Text)
+  await window.electron.pty.write('\x03')
+  inputRef.value?.focus()
+}
+
 // Handle keyboard shortcuts
 async function handleKeydown(e: KeyboardEvent) {
+  // Ctrl+C to send interrupt
+  if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault()
+    sendInterrupt()
+    return
+  }
+
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()
     runCommand()
@@ -257,7 +274,7 @@ watch(inputRef, (el) => {
 </script>
 
 <template>
-  <div class="bg-white border-t border-gray-200 p-4">
+  <div class="draft-panel">
     <!-- Command Input Row -->
     <div class="flex items-center gap-3 mb-3">
       <span class="text-gray-500 font-mono">$</span>
@@ -270,6 +287,13 @@ watch(inputRef, (el) => {
         @keydown="handleKeydown"
         :disabled="terminalStore.isRunning"
       />
+      <button
+        @click="sendInterrupt"
+        class="px-3 py-2 bg-gray-200 text-gray-600 rounded-md font-medium hover:bg-gray-300 transition-colors"
+        title="Send Ctrl+C to stop running process"
+      >
+        Stop
+      </button>
       <button
         @click="runCommand"
         :disabled="!terminalStore.draftCommand.trim() || terminalStore.isRunning || commandStatus.action === 'block'"
@@ -364,9 +388,18 @@ watch(inputRef, (el) => {
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div v-else class="text-gray-400 text-sm">
-      Type a command to see its explanation
+    <!-- Empty State with Suggestions -->
+    <div v-else class="empty-state">
+      <p class="text-gray-400 text-sm mb-3">Type a command to see its explanation</p>
+      <div class="flex flex-wrap gap-2">
+        <span class="text-gray-400 text-sm">Try:</span>
+        <button
+          v-for="cmd in suggestedCommands"
+          :key="cmd"
+          class="suggestion-badge"
+          @click="terminalStore.setDraftCommand(cmd)"
+        >{{ cmd }}</button>
+      </div>
     </div>
 
     <!-- Skill Level Indicator -->
@@ -393,6 +426,31 @@ watch(inputRef, (el) => {
 </template>
 
 <style scoped>
+.draft-panel {
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  padding: 16px;
+  height: 150px;
+  overflow-y: auto;
+}
+
+.suggestion-badge {
+  padding: 4px 12px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.suggestion-badge:hover {
+  background: #e5e7eb;
+  border-color: #d1d5db;
+}
+
 .skill-indicator {
   display: inline-flex;
   align-items: center;

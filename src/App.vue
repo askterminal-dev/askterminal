@@ -47,16 +47,16 @@ function closeSettingsModal() {
 </script>
 
 <template>
-  <div class="h-full flex flex-col">
+  <div class="app-layout">
     <!-- Window Title Bar (drag region for hiddenInset style) -->
-    <div class="h-8 bg-gray-200 flex items-center justify-center drag-region">
+    <div class="title-bar drag-region">
       <div class="text-sm text-gray-600">
         {{ terminalStore.cwd }}
       </div>
     </div>
 
     <!-- Terminal Region -->
-    <div class="flex-1 min-h-0">
+    <div class="terminal-region">
       <TerminalView />
     </div>
 
@@ -76,6 +76,25 @@ function closeSettingsModal() {
 </template>
 
 <style scoped>
+.app-layout {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 32px 1fr auto;
+  overflow: hidden;
+}
+
+.title-bar {
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.terminal-region {
+  overflow: hidden;
+  min-height: 0;
+}
+
 .drag-region {
   -webkit-app-region: drag;
 }
