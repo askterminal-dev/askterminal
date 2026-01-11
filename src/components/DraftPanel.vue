@@ -188,7 +188,7 @@ watch(inputRef, (el) => {
 </script>
 
 <template>
-  <div class="bg-white border-t border-gray-200 p-4">
+  <div class="draft-panel">
     <!-- Command Input Row -->
     <div class="flex items-center gap-3 mb-3">
       <span class="text-gray-500 font-mono">$</span>
@@ -269,3 +269,13 @@ watch(inputRef, (el) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.draft-panel {
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  padding: 16px;
+  height: 150px;
+  overflow-y: auto;
+}
+</style>
