@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
+import { useSettingsStore, type SkillLevel } from '../stores/settings'
 
 const props = defineProps<{
   show: boolean
@@ -9,50 +10,12 @@ const emit = defineEmits<{
   close: []
 }>()
 
-// Settings state (simple local storage for now)
-const theme = ref<'light' | 'dark'>('light')
-const terminalFontSize = ref<'small' | 'medium' | 'large'>('medium')
-const autoFocusInput = ref(true)
+const settingsStore = useSettingsStore()
 
-// Load settings from localStorage
+// Load settings on mount
 onMounted(() => {
-  const saved = localStorage.getItem('askterminal-settings')
-  if (saved) {
-    try {
-      const settings = JSON.parse(saved)
-      theme.value = settings.theme || 'light'
-      terminalFontSize.value = settings.terminalFontSize || 'medium'
-      autoFocusInput.value = settings.autoFocusInput ?? true
-    } catch (e) {
-      // Ignore parse errors
-    }
-  }
+  settingsStore.loadSettings()
 })
-
-function saveSettings() {
-  localStorage.setItem('askterminal-settings', JSON.stringify({
-    theme: theme.value,
-    terminalFontSize: terminalFontSize.value,
-    autoFocusInput: autoFocusInput.value
-  }))
-}
-
-function setTheme(newTheme: 'light' | 'dark') {
-  theme.value = newTheme
-  document.documentElement.setAttribute('data-theme', newTheme)
-  saveSettings()
-}
-
-function setFontSize(size: 'small' | 'medium' | 'large') {
-  terminalFontSize.value = size
-  document.documentElement.setAttribute('data-terminal-font', size)
-  saveSettings()
-}
-
-function toggleAutoFocus() {
-  autoFocusInput.value = !autoFocusInput.value
-  saveSettings()
-}
 
 function close() {
   emit('close')
@@ -63,6 +26,24 @@ function handleOverlayClick(e: MouseEvent) {
     close()
   }
 }
+
+const skillLevelOptions: { value: SkillLevel; label: string; description: string }[] = [
+  {
+    value: 'beginner',
+    label: 'Beginner',
+    description: 'Only safe commands (ls, cd, pwd, cat...). All input through explanation panel.'
+  },
+  {
+    value: 'intermediate',
+    label: 'Intermediate',
+    description: 'Safe + moderate commands (cp, mv, git...). Dangerous commands require confirmation.'
+  },
+  {
+    value: 'advanced',
+    label: 'Advanced',
+    description: 'All commands allowed. Direct terminal typing enabled.'
+  }
+]
 </script>
 
 <template>
@@ -89,20 +70,61 @@ function handleOverlayClick(e: MouseEvent) {
 
         <!-- Settings Body -->
         <div class="modal-body">
+          <!-- Skill Level -->
+          <div class="setting-group">
+            <label class="setting-label">Skill Level</label>
+            <div class="skill-options">
+              <button
+                v-for="option in skillLevelOptions"
+                :key="option.value"
+                :class="['skill-option', { active: settingsStore.skillLevel === option.value }]"
+                @click="settingsStore.setSkillLevel(option.value)"
+              >
+                <div class="skill-option-header">
+                  <span class="skill-radio">
+                    <span v-if="settingsStore.skillLevel === option.value" class="skill-radio-dot"></span>
+                  </span>
+                  <span class="skill-label">{{ option.label }}</span>
+                </div>
+                <p class="skill-description">{{ option.description }}</p>
+              </button>
+            </div>
+          </div>
+
+          <!-- Direct Terminal Input (only at intermediate) -->
+          <div v-if="settingsStore.skillLevel === 'intermediate'" class="setting-group">
+            <div class="toggle-row">
+              <div>
+                <label class="setting-label">Direct Terminal Typing</label>
+                <p class="setting-description">Type directly in the terminal instead of the command panel</p>
+              </div>
+              <button
+                :class="['toggle-switch', { active: settingsStore.directTerminalInput }]"
+                @click="settingsStore.setDirectTerminalInput(!settingsStore.directTerminalInput)"
+                role="switch"
+                :aria-checked="settingsStore.directTerminalInput"
+              >
+                <span class="toggle-knob"></span>
+              </button>
+            </div>
+          </div>
+
+          <div class="setting-divider"></div>
+
           <!-- Theme Setting -->
           <div class="setting-group">
             <label class="setting-label">Theme</label>
             <div class="theme-options">
               <button
-                :class="['theme-option', { active: theme === 'light' }]"
-                @click="setTheme('light')"
+                :class="['theme-option', { active: settingsStore.theme === 'light' }]"
+                @click="settingsStore.setTheme('light')"
               >
                 <span class="theme-icon">☀️</span>
                 <span>Light</span>
               </button>
               <button
-                :class="['theme-option', { active: theme === 'dark' }]"
-                @click="setTheme('dark')"
+                :class="['theme-option', { active: settingsStore.theme === 'dark' }]"
+                @click="settingsStore.setTheme('dark')"
               >
                 <span class="theme-icon">🌙</span>
                 <span>Dark</span>
@@ -115,40 +137,22 @@ function handleOverlayClick(e: MouseEvent) {
             <label class="setting-label">Terminal Font Size</label>
             <div class="font-options">
               <button
-                :class="['font-option', { active: terminalFontSize === 'small' }]"
-                @click="setFontSize('small')"
+                :class="['font-option', { active: settingsStore.terminalFontSize === 'small' }]"
+                @click="settingsStore.setTerminalFontSize('small')"
               >
                 Small
               </button>
               <button
-                :class="['font-option', { active: terminalFontSize === 'medium' }]"
-                @click="setFontSize('medium')"
+                :class="['font-option', { active: settingsStore.terminalFontSize === 'medium' }]"
+                @click="settingsStore.setTerminalFontSize('medium')"
               >
                 Medium
               </button>
               <button
-                :class="['font-option', { active: terminalFontSize === 'large' }]"
-                @click="setFontSize('large')"
+                :class="['font-option', { active: settingsStore.terminalFontSize === 'large' }]"
+                @click="settingsStore.setTerminalFontSize('large')"
               >
                 Large
-              </button>
-            </div>
-          </div>
-
-          <!-- Auto Focus Toggle -->
-          <div class="setting-group">
-            <div class="toggle-row">
-              <div>
-                <label class="setting-label">Auto-focus Command Input</label>
-                <p class="setting-description">Return focus to input after running a command</p>
-              </div>
-              <button
-                :class="['toggle-switch', { active: autoFocusInput }]"
-                @click="toggleAutoFocus"
-                role="switch"
-                :aria-checked="autoFocusInput"
-              >
-                <span class="toggle-knob"></span>
               </button>
             </div>
           </div>
@@ -241,6 +245,83 @@ function handleOverlayClick(e: MouseEvent) {
   font-size: 13px;
   color: #6b7280;
   margin: 0;
+}
+
+.setting-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 24px 0;
+}
+
+/* Skill Level Options */
+.skill-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skill-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.skill-option:hover {
+  border-color: #d1d5db;
+}
+
+.skill-option.active {
+  border-color: #111827;
+  background: #f9fafb;
+}
+
+.skill-option-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.skill-radio {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.skill-option.active .skill-radio {
+  border-color: #111827;
+}
+
+.skill-radio-dot {
+  width: 10px;
+  height: 10px;
+  background: #111827;
+  border-radius: 50%;
+}
+
+.skill-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.skill-description {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+  padding-left: 28px;
 }
 
 /* Theme Options */

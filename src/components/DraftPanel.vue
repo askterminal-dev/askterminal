@@ -1,12 +1,23 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
 import { useTerminalStore } from '../stores/terminal'
+import { useSettingsStore } from '../stores/settings'
 import { parseCommand, getKnownCommands, type CommandInfo } from '../services/CommandParser'
+import ConfirmDialog from './ConfirmDialog.vue'
 
 const terminalStore = useTerminalStore()
+const settingsStore = useSettingsStore()
 const inputRef = ref<HTMLInputElement | null>(null)
+
+const emit = defineEmits<{
+  openSettings: []
+}>()
 const tabIndex = ref(0)
 const suggestions = ref<string[]>([])
+
+// Confirmation dialog state
+const showConfirmDialog = ref(false)
+const pendingCommand = ref('')
 
 // Parse the current command
 const commandInfo = computed<CommandInfo | null>(() => {
@@ -97,11 +108,31 @@ const isUnknownCommand = computed(() => {
   return commandInfo.value?.description.startsWith('Unknown command')
 })
 
-// Run the command
-async function runCommand() {
-  const cmd = terminalStore.draftCommand.trim()
-  if (!cmd) return
+// Skill level display style
+const skillLevelStyle = computed(() => {
+  const level = settingsStore.skillLevel
+  const styles = {
+    beginner: { label: 'Beginner', dot: 'bg-green-500' },
+    intermediate: { label: 'Intermediate', dot: 'bg-amber-500' },
+    advanced: { label: 'Advanced', dot: 'bg-blue-500' }
+  }
+  return styles[level]
+})
 
+// Check if command is blocked based on skill level
+const commandStatus = computed(() => {
+  if (!commandInfo.value) return { allowed: true, action: 'allow' as const }
+  const safety = commandInfo.value.safety
+  const action = settingsStore.canRunCommand(safety)
+  return {
+    allowed: action === 'allow',
+    action,
+    blockMessage: action === 'block' ? settingsStore.getBlockMessage(safety) : ''
+  }
+})
+
+// Actually execute the command
+async function executeCommand(cmd: string) {
   terminalStore.setIsRunning(true)
   terminalStore.addToHistory(cmd)
 
@@ -115,6 +146,44 @@ async function runCommand() {
   setTimeout(() => {
     inputRef.value?.focus()
   }, 50)
+}
+
+// Run the command (with skill level checks)
+async function runCommand() {
+  const cmd = terminalStore.draftCommand.trim()
+  if (!cmd) return
+
+  const status = commandStatus.value
+
+  if (status.action === 'block') {
+    // Command is blocked - don't run, message is shown in UI
+    return
+  }
+
+  if (status.action === 'confirm') {
+    // Need confirmation for dangerous command
+    pendingCommand.value = cmd
+    showConfirmDialog.value = true
+    return
+  }
+
+  // Command is allowed
+  await executeCommand(cmd)
+}
+
+// Handle confirmation dialog
+function onConfirm() {
+  showConfirmDialog.value = false
+  if (pendingCommand.value) {
+    executeCommand(pendingCommand.value)
+    pendingCommand.value = ''
+  }
+}
+
+function onCancel() {
+  showConfirmDialog.value = false
+  pendingCommand.value = ''
+  inputRef.value?.focus()
 }
 
 // Handle keyboard shortcuts
@@ -203,10 +272,15 @@ watch(inputRef, (el) => {
       />
       <button
         @click="runCommand"
-        :disabled="!terminalStore.draftCommand.trim() || terminalStore.isRunning"
-        class="px-4 py-2 bg-gray-900 text-white rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
+        :disabled="!terminalStore.draftCommand.trim() || terminalStore.isRunning || commandStatus.action === 'block'"
+        :class="[
+          'px-4 py-2 rounded-md font-medium transition-colors',
+          commandStatus.action === 'block'
+            ? 'bg-red-100 text-red-400 cursor-not-allowed'
+            : 'bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed'
+        ]"
       >
-        Run
+        {{ commandStatus.action === 'block' ? 'Blocked' : 'Run' }}
       </button>
     </div>
 
@@ -238,6 +312,33 @@ watch(inputRef, (el) => {
           {{ commandInfo.safetyMessage }}
         </span>
       </div>
+
+      <!-- Blocked Command Message -->
+      <div v-if="commandStatus.action === 'block'" class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+        <div class="flex items-start gap-2">
+          <svg class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke-width="2"/>
+            <path stroke-width="2" d="M15 9l-6 6M9 9l6 6"/>
+          </svg>
+          <div>
+            <p class="text-red-700 font-medium text-sm">Command blocked</p>
+            <p class="text-red-600 text-sm">{{ commandStatus.blockMessage }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirmation Required Message -->
+      <div v-else-if="commandStatus.action === 'confirm'" class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+        <div class="flex items-start gap-2">
+          <svg class="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-width="2" d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          </svg>
+          <div>
+            <p class="text-amber-700 font-medium text-sm">Confirmation required</p>
+            <p class="text-amber-600 text-sm">This command requires confirmation before running.</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Command Suggestions (for unknown commands with matches) -->
@@ -267,5 +368,57 @@ watch(inputRef, (el) => {
     <div v-else class="text-gray-400 text-sm">
       Type a command to see its explanation
     </div>
+
+    <!-- Skill Level Indicator -->
+    <div class="mt-3 flex justify-end">
+      <button
+        class="skill-indicator"
+        @click="$emit('openSettings')"
+        :title="'Click to change skill level'"
+      >
+        <span class="skill-dot" :class="skillLevelStyle.dot"></span>
+        <span class="skill-text">{{ skillLevelStyle.label }}</span>
+      </button>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <ConfirmDialog
+      :show="showConfirmDialog"
+      :command="pendingCommand"
+      message="This command can permanently delete or modify files. This action cannot be undone."
+      @confirm="onConfirm"
+      @cancel="onCancel"
+    />
   </div>
 </template>
+
+<style scoped>
+.skill-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9999px;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.skill-indicator:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.skill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.skill-text {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+</style>
