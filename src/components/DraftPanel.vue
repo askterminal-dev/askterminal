@@ -402,17 +402,15 @@ watch(inputRef, (el) => {
       </div>
     </div>
 
-    <!-- Skill Level Indicator -->
-    <div class="mt-3 flex justify-end">
-      <button
-        class="skill-indicator"
-        @click="$emit('openSettings')"
-        :title="'Click to change skill level'"
-      >
-        <span class="skill-dot" :class="skillLevelStyle.dot"></span>
-        <span class="skill-text">{{ skillLevelStyle.label }}</span>
-      </button>
-    </div>
+    <!-- Skill Level Indicator (fixed position) -->
+    <button
+      class="skill-indicator"
+      @click="$emit('openSettings')"
+      :title="'Click to change skill level'"
+    >
+      <span class="skill-dot" :class="skillLevelStyle.dot"></span>
+      <span class="skill-text">{{ skillLevelStyle.label }}</span>
+    </button>
 
     <!-- Confirmation Dialog -->
     <ConfirmDialog
@@ -432,6 +430,13 @@ watch(inputRef, (el) => {
   padding: 16px;
   height: 150px;
   overflow-y: auto;
+  position: relative;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.draft-panel::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .suggestion-badge {
@@ -452,6 +457,9 @@ watch(inputRef, (el) => {
 }
 
 .skill-indicator {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
