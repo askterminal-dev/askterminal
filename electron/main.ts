@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, session } from 'electron'
 import { join } from 'path'
 import * as ptyModule from 'node-pty'
 import type { IPty } from 'node-pty'
@@ -24,7 +24,7 @@ function createWindow() {
   // Load the app
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL)
-    mainWindow.webContents.openDevTools()
+    // mainWindow.webContents.openDevTools()  // Uncomment to debug
   } else {
     mainWindow.loadFile(join(__dirname, '../dist/index.html'))
   }
@@ -107,8 +107,72 @@ ipcMain.handle('pty:getCwd', () => {
   return process.env.HOME
 })
 
+// Directory listing for autocomplete
+ipcMain.handle('fs:listDir', async (_, dirPath: string) => {
+  const fs = require('fs')
+  const path = require('path')
+
+  try {
+    // Expand ~ to home directory
+    const expandedPath = dirPath.replace(/^~/, process.env.HOME || '')
+    const resolvedPath = path.resolve(expandedPath)
+
+    const entries = fs.readdirSync(resolvedPath, { withFileTypes: true })
+    return entries.map((entry: any) => ({
+      name: entry.name,
+      isDirectory: entry.isDirectory()
+    }))
+  } catch (error) {
+    return []
+  }
+})
+
+// Get completions for a partial path
+ipcMain.handle('fs:getCompletions', async (_, partialPath: string, cwd: string) => {
+  const fs = require('fs')
+  const path = require('path')
+
+  try {
+    // Expand ~ to home directory
+    let expandedPath = partialPath.replace(/^~/, process.env.HOME || '')
+
+    // If not absolute, resolve relative to cwd
+    if (!path.isAbsolute(expandedPath)) {
+      expandedPath = path.join(cwd.replace(/^~/, process.env.HOME || ''), expandedPath)
+    }
+
+    const dir = path.dirname(expandedPath)
+    const prefix = path.basename(expandedPath)
+
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+    const matches = entries
+      .filter((entry: any) => entry.name.startsWith(prefix))
+      .map((entry: any) => ({
+        name: entry.name,
+        isDirectory: entry.isDirectory(),
+        fullPath: path.join(dir, entry.name)
+      }))
+
+    return { dir, matches }
+  } catch (error) {
+    return { dir: '', matches: [] }
+  }
+})
+
 // App lifecycle
 app.whenReady().then(async () => {
+  // Set Content Security Policy
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+        ]
+      }
+    })
+  })
+
   createWindow()
 
   // Delay PTY creation slightly to ensure window is ready

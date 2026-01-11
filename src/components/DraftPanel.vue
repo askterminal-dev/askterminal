@@ -1,16 +1,40 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useTerminalStore } from '../stores/terminal'
-import { parseCommand, type CommandInfo } from '../services/CommandParser'
+import { parseCommand, getKnownCommands, type CommandInfo } from '../services/CommandParser'
 
 const terminalStore = useTerminalStore()
 const inputRef = ref<HTMLInputElement | null>(null)
+const tabIndex = ref(0)
+const suggestions = ref<string[]>([])
 
 // Parse the current command
 const commandInfo = computed<CommandInfo | null>(() => {
   if (!terminalStore.draftCommand.trim()) return null
   return parseCommand(terminalStore.draftCommand)
 })
+
+// Get command suggestions (sync)
+function getCommandSuggestions(partial: string): string[] {
+  const commands = getKnownCommands()
+  return commands.filter(cmd => cmd.startsWith(partial.toLowerCase()))
+}
+
+// Get path completions (async)
+async function getPathCompletions(partialPath: string): Promise<string[]> {
+  if (!partialPath) {
+    // List current directory
+    const result = await window.electron.fs.getCompletions('./', terminalStore.cwd)
+    return result.matches.map(m => m.name + (m.isDirectory ? '/' : ''))
+  }
+
+  const result = await window.electron.fs.getCompletions(partialPath, terminalStore.cwd)
+  return result.matches.map(m => {
+    // Preserve the path prefix the user typed
+    const prefix = partialPath.substring(0, partialPath.lastIndexOf('/') + 1)
+    return prefix + m.name + (m.isDirectory ? '/' : '')
+  })
+}
 
 // Safety indicator colors
 const safetyColors = {
@@ -40,12 +64,68 @@ async function runCommand() {
 }
 
 // Handle keyboard shortcuts
-function handleKeydown(e: KeyboardEvent) {
+async function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()
     runCommand()
+    return
+  }
+
+  // Tab autocomplete
+  if (e.key === 'Tab') {
+    e.preventDefault()
+
+    const input = terminalStore.draftCommand
+    const parts = input.trim().split(/\s+/)
+    const lastPart = parts[parts.length - 1] || ''
+
+    let currentSuggestions: string[] = []
+
+    if (parts.length === 1) {
+      // Command completion
+      currentSuggestions = getCommandSuggestions(lastPart)
+    } else {
+      // Path completion for arguments
+      currentSuggestions = await getPathCompletions(lastPart)
+    }
+
+    if (currentSuggestions.length === 0) return
+
+    // If suggestions changed, reset index
+    if (JSON.stringify(currentSuggestions) !== JSON.stringify(suggestions.value)) {
+      suggestions.value = currentSuggestions
+      tabIndex.value = 0
+    } else {
+      // Cycle through suggestions
+      tabIndex.value = (tabIndex.value + 1) % suggestions.value.length
+    }
+
+    // Apply the suggestion
+    if (parts.length === 1) {
+      // Replace command
+      terminalStore.setDraftCommand(suggestions.value[tabIndex.value])
+    } else {
+      // Replace last argument (path)
+      parts[parts.length - 1] = suggestions.value[tabIndex.value]
+      terminalStore.setDraftCommand(parts.join(' '))
+    }
   }
 }
+
+// Reset tab index when input changes manually
+let lastInput = ''
+watch(() => terminalStore.draftCommand, (newVal) => {
+  // Only reset if user is typing, not from tab completion
+  if (suggestions.value.length > 0) {
+    const parts = newVal.trim().split(/\s+/)
+    const lastPart = parts[parts.length - 1]
+    if (!suggestions.value.some(s => s === lastPart || newVal.endsWith(s))) {
+      tabIndex.value = 0
+      suggestions.value = []
+    }
+  }
+  lastInput = newVal
+})
 
 // Focus input on mount
 watch(inputRef, (el) => {

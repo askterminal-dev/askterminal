@@ -18,9 +18,28 @@ const ptyAPI = {
   }
 }
 
+// Filesystem API for autocomplete
+interface DirEntry {
+  name: string
+  isDirectory: boolean
+}
+
+interface CompletionResult {
+  dir: string
+  matches: Array<{ name: string; isDirectory: boolean; fullPath: string }>
+}
+
+const fsAPI = {
+  listDir: (dirPath: string): Promise<DirEntry[]> =>
+    ipcRenderer.invoke('fs:listDir', dirPath),
+  getCompletions: (partialPath: string, cwd: string): Promise<CompletionResult> =>
+    ipcRenderer.invoke('fs:getCompletions', partialPath, cwd)
+}
+
 // Expose APIs to renderer
 contextBridge.exposeInMainWorld('electron', {
-  pty: ptyAPI
+  pty: ptyAPI,
+  fs: fsAPI
 })
 
 // Type declarations for renderer
