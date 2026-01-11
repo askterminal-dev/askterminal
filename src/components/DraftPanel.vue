@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useTerminalStore } from '../stores/terminal'
 import { parseCommand, getKnownCommands, type CommandInfo } from '../services/CommandParser'
 
@@ -61,6 +61,11 @@ async function runCommand() {
 
   terminalStore.clearDraftCommand()
   terminalStore.setIsRunning(false)
+
+  // Refocus the input for the next command (delay to let terminal finish updating)
+  setTimeout(() => {
+    inputRef.value?.focus()
+  }, 50)
 }
 
 // Handle keyboard shortcuts
