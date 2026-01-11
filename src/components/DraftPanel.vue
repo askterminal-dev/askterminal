@@ -8,6 +8,9 @@ const inputRef = ref<HTMLInputElement | null>(null)
 const tabIndex = ref(0)
 const suggestions = ref<string[]>([])
 
+// Suggested commands for empty state
+const suggestedCommands = ['ls', 'pwd', 'cd ~', 'echo "hello"', 'cat', 'mkdir']
+
 // Parse the current command
 const commandInfo = computed<CommandInfo | null>(() => {
   if (!terminalStore.draftCommand.trim()) return null
@@ -263,9 +266,18 @@ watch(inputRef, (el) => {
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div v-else class="text-gray-400 text-sm">
-      Type a command to see its explanation
+    <!-- Empty State with Suggestions -->
+    <div v-else class="empty-state">
+      <p class="text-gray-400 text-sm mb-3">Type a command to see its explanation</p>
+      <div class="flex flex-wrap gap-2">
+        <span class="text-gray-400 text-sm">Try:</span>
+        <button
+          v-for="cmd in suggestedCommands"
+          :key="cmd"
+          class="suggestion-badge"
+          @click="terminalStore.setDraftCommand(cmd)"
+        >{{ cmd }}</button>
+      </div>
     </div>
   </div>
 </template>
@@ -277,5 +289,22 @@ watch(inputRef, (el) => {
   padding: 16px;
   height: 150px;
   overflow-y: auto;
+}
+
+.suggestion-badge {
+  padding: 4px 12px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.suggestion-badge:hover {
+  background: #e5e7eb;
+  border-color: #d1d5db;
 }
 </style>
