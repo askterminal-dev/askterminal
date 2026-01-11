@@ -33,9 +33,20 @@
   },
   "build": {
     "appId": "dev.askterminal.app",
-    "productName": "AskTerminal",
+    "productName": "Ask Terminal",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
     "mac": {
-      "category": "public.app-category.developer-tools"
+      "category": "public.app-category.developer-tools",
+      "icon": "build/icon.icns"
+    },
+    "win": {
+      "icon": "build/icon.icns"
+    },
+    "linux": {
+      "icon": "build/icon.iconset"
     }
   }
 }
