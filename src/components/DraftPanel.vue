@@ -14,10 +14,40 @@ const commandInfo = computed<CommandInfo | null>(() => {
   return parseCommand(terminalStore.draftCommand)
 })
 
-// Get command suggestions (sync)
+// Levenshtein distance for typo detection
+function levenshtein(a: string, b: string): number {
+  const matrix: number[][] = []
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i]
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      matrix[i][j] = b[i-1] === a[j-1]
+        ? matrix[i-1][j-1]
+        : Math.min(matrix[i-1][j-1] + 1, matrix[i][j-1] + 1, matrix[i-1][j] + 1)
+    }
+  }
+  return matrix[b.length][a.length]
+}
+
+// Get command suggestions (sync) - prefix match + fuzzy match for typos
 function getCommandSuggestions(partial: string): string[] {
   const commands = getKnownCommands()
-  return commands.filter(cmd => cmd.startsWith(partial.toLowerCase()))
+  const input = partial.toLowerCase()
+
+  // First: prefix matches
+  const prefixMatches = commands.filter(cmd => cmd.startsWith(input))
+
+  // Second: fuzzy matches for typos (within edit distance 2)
+  const fuzzyMatches = commands
+    .filter(cmd => !cmd.startsWith(input)) // exclude prefix matches
+    .filter(cmd => {
+      const dist = levenshtein(input, cmd)
+      // Allow distance up to 2, but scale with word length
+      return dist <= Math.min(2, Math.floor(cmd.length / 2))
+    })
+    .sort((a, b) => levenshtein(input, a) - levenshtein(input, b))
+
+  return [...prefixMatches, ...fuzzyMatches]
 }
 
 // Get path completions (async)
@@ -46,6 +76,25 @@ const safetyColors = {
 const safetyStyle = computed(() => {
   const safety = commandInfo.value?.safety || 'safe'
   return safetyColors[safety]
+})
+
+// Live command suggestions as user types
+const liveSuggestions = computed(() => {
+  const input = terminalStore.draftCommand.trim()
+  if (!input) return []
+
+  // Only suggest for first word (the command)
+  const parts = input.split(/\s+/)
+  if (parts.length > 1) return []
+
+  // Get matching commands
+  const matches = getCommandSuggestions(parts[0])
+  return matches.slice(0, 5)
+})
+
+// Check if current command is unknown (not in database)
+const isUnknownCommand = computed(() => {
+  return commandInfo.value?.description.startsWith('Unknown command')
 })
 
 // Run the command
@@ -162,7 +211,7 @@ watch(inputRef, (el) => {
     </div>
 
     <!-- Explanation Area -->
-    <div v-if="commandInfo" class="space-y-2">
+    <div v-if="commandInfo && !isUnknownCommand" class="space-y-2">
       <!-- Plain English Description -->
       <p class="text-gray-700">
         {{ commandInfo.description }}
@@ -188,6 +237,29 @@ watch(inputRef, (el) => {
         <span :class="safetyStyle.text">
           {{ commandInfo.safetyMessage }}
         </span>
+      </div>
+    </div>
+
+    <!-- Command Suggestions (for unknown commands with matches) -->
+    <div v-else-if="isUnknownCommand && liveSuggestions.length > 0" class="space-y-2">
+      <div class="flex items-center gap-2 text-sm">
+        <span class="text-gray-500">Did you mean:</span>
+        <span
+          v-for="cmd in liveSuggestions"
+          :key="cmd"
+          class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded font-mono cursor-pointer hover:bg-gray-200"
+          @click="terminalStore.setDraftCommand(cmd)"
+        >{{ cmd }}</span>
+      </div>
+      <p class="text-gray-400 text-sm">Press Tab to autocomplete</p>
+    </div>
+
+    <!-- Unknown command with no suggestions -->
+    <div v-else-if="isUnknownCommand" class="space-y-2">
+      <p class="text-gray-500">{{ commandInfo?.description }}</p>
+      <div class="flex items-center gap-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+        <span class="text-amber-700">{{ commandInfo?.safetyMessage }}</span>
       </div>
     </div>
 
