@@ -36,10 +36,23 @@ const fsAPI = {
     ipcRenderer.invoke('fs:getCompletions', partialPath, cwd)
 }
 
+// App API for menu-triggered actions
+const appAPI = {
+  onShowAboutModal: (callback: () => void) => {
+    ipcRenderer.on('show-about-modal', callback)
+    return () => ipcRenderer.removeListener('show-about-modal', callback)
+  },
+  onShowSettingsModal: (callback: () => void) => {
+    ipcRenderer.on('show-settings-modal', callback)
+    return () => ipcRenderer.removeListener('show-settings-modal', callback)
+  }
+}
+
 // Expose APIs to renderer
 contextBridge.exposeInMainWorld('electron', {
   pty: ptyAPI,
-  fs: fsAPI
+  fs: fsAPI,
+  app: appAPI
 })
 
 // Type declarations for renderer

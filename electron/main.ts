@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, session } from 'electron'
+import { app, BrowserWindow, ipcMain, session, Menu } from 'electron'
 import { join } from 'path'
 import * as ptyModule from 'node-pty'
 import type { IPty } from 'node-pty'
@@ -159,6 +159,106 @@ ipcMain.handle('fs:getCompletions', async (_, partialPath: string, cwd: string) 
   }
 })
 
+// Application Menu
+function createMenu() {
+  const isMac = process.platform === 'darwin'
+
+  const template: Electron.MenuItemConstructorOptions[] = [
+    // App menu (macOS only)
+    ...(isMac ? [{
+      label: app.name,
+      submenu: [
+        {
+          label: 'About AskTerminal',
+          click: () => {
+            mainWindow?.webContents.send('show-about-modal')
+          }
+        },
+        { type: 'separator' as const },
+        {
+          label: 'Settings...',
+          accelerator: 'CmdOrCtrl+,',
+          click: () => {
+            mainWindow?.webContents.send('show-settings-modal')
+          }
+        },
+        { type: 'separator' as const },
+        { role: 'services' as const },
+        { type: 'separator' as const },
+        { role: 'hide' as const },
+        { role: 'hideOthers' as const },
+        { role: 'unhide' as const },
+        { type: 'separator' as const },
+        { role: 'quit' as const }
+      ]
+    }] : []),
+    // File menu
+    {
+      label: 'File',
+      submenu: [
+        isMac ? { role: 'close' as const } : { role: 'quit' as const }
+      ]
+    },
+    // Edit menu
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' as const },
+        { role: 'redo' as const },
+        { type: 'separator' as const },
+        { role: 'cut' as const },
+        { role: 'copy' as const },
+        { role: 'paste' as const },
+        { role: 'selectAll' as const }
+      ]
+    },
+    // View menu
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' as const },
+        { role: 'forceReload' as const },
+        { role: 'toggleDevTools' as const },
+        { type: 'separator' as const },
+        { role: 'resetZoom' as const },
+        { role: 'zoomIn' as const },
+        { role: 'zoomOut' as const },
+        { type: 'separator' as const },
+        { role: 'togglefullscreen' as const }
+      ]
+    },
+    // Window menu
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' as const },
+        { role: 'zoom' as const },
+        ...(isMac ? [
+          { type: 'separator' as const },
+          { role: 'front' as const }
+        ] : [
+          { role: 'close' as const }
+        ])
+      ]
+    },
+    // Help menu
+    {
+      label: 'Help',
+      submenu: [
+        {
+          label: 'About AskTerminal',
+          click: () => {
+            mainWindow?.webContents.send('show-about-modal')
+          }
+        }
+      ]
+    }
+  ]
+
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
+}
+
 // App lifecycle
 app.whenReady().then(async () => {
   // Set Content Security Policy
@@ -174,6 +274,7 @@ app.whenReady().then(async () => {
   })
 
   createWindow()
+  createMenu()
 
   // Delay PTY creation slightly to ensure window is ready
   setTimeout(() => {
