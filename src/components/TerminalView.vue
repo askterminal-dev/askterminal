@@ -31,11 +31,19 @@ onMounted(() => {
 
   // Open terminal in container
   terminal.open(terminalContainer.value)
-  fitAddon.fit()
+
+  // Fit after layout is complete
+  requestAnimationFrame(() => {
+    fitAddon?.fit()
+    if (terminal) {
+      window.electron.pty.resize(terminal.cols, terminal.rows)
+    }
+  })
 
   // Listen for PTY data
   window.electron.pty.onData((data) => {
     terminal?.write(data)
+    terminal?.scrollToBottom()
   })
 
   window.electron.pty.onExit((code) => {
@@ -75,18 +83,26 @@ defineExpose({ writeToTerminal })
 <template>
   <div
     ref="terminalContainer"
-    class="h-full w-full bg-terminal-bg"
+    class="terminal-container"
   ></div>
 </template>
 
 <style scoped>
-.bg-terminal-bg {
+.terminal-container {
+  height: 100%;
+  width: 100%;
   background-color: #111827;
+  overflow: hidden;
 }
 
 :deep(.xterm) {
   height: 100%;
   padding: 8px;
+  box-sizing: border-box;
+}
+
+:deep(.xterm-screen) {
+  height: 100% !important;
 }
 
 :deep(.xterm-viewport) {
