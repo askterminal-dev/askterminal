@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { version } from '../../package.json'
+import logoSvg from '../assets/logo.svg'
 
 const props = defineProps<{
   show: boolean
@@ -45,9 +46,7 @@ function handleOverlayClick(e: MouseEvent) {
 
         <!-- Logo -->
         <div class="logo-container">
-          <div class="logo">
-            <span class="logo-icon">$</span>
-          </div>
+          <img :src="logoSvg" alt="Ask Terminal" class="logo" />
         </div>
 
         <!-- App Info -->
@@ -139,18 +138,6 @@ function handleOverlayClick(e: MouseEvent) {
 .logo {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #111827 0%, #374151 100%);
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo-icon {
-  font-size: 40px;
-  font-family: monospace;
-  color: #22c55e;
-  font-weight: bold;
 }
 
 .app-name {
