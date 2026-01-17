@@ -424,7 +424,6 @@ async function handleKeydown(e: KeyboardEvent) {
 }
 
 // Reset tab index when input changes manually
-let lastInput = ''
 watch(() => terminalStore.draftCommand, (newVal) => {
   // Only reset if user is typing, not from tab completion
   if (suggestions.value.length > 0) {
@@ -435,7 +434,6 @@ watch(() => terminalStore.draftCommand, (newVal) => {
       suggestions.value = []
     }
   }
-  lastInput = newVal
 })
 
 // Focus input on mount

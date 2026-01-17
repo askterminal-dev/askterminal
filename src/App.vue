@@ -4,9 +4,6 @@ import TerminalView from './components/TerminalView.vue'
 import DraftPanel from './components/DraftPanel.vue'
 import AboutModal from './components/AboutModal.vue'
 import SettingsModal from './components/SettingsModal.vue'
-import { useTerminalStore } from './stores/terminal'
-
-const terminalStore = useTerminalStore()
 
 // Modal visibility state
 const showAboutModal = ref(false)

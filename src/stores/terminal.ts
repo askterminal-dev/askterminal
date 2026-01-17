@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
 // Interactive program types and their controls
 export type InteractiveType = 'pager' | 'editor-vim' | 'editor-nano' | 'monitor' | null
