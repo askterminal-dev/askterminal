@@ -52,7 +52,7 @@ function createPty() {
   console.log('Creating PTY with shell:', shell, 'cwd:', home)
 
   try {
-    pty = ptyModule.spawn(shell, [], {
+    pty = ptyModule.spawn(shell, ['-l'], {
       name: 'xterm-256color',
       cols: 80,
       rows: 24,

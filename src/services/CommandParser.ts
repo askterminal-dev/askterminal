@@ -99,7 +99,7 @@ function getArgumentType(arg: string): string {
 /**
  * Build a human-readable description of the full command
  */
-function buildDescription(cmd: string, def: CommandDef, args: string[]): string {
+function buildDescription(_cmd: string, def: CommandDef, args: string[]): string {
   let desc = def.description
 
   // Add context based on arguments

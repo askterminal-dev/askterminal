@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { version } from '../../package.json'
+
 const props = defineProps<{
   show: boolean
 }>()
@@ -7,7 +9,9 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const APP_VERSION = '0.1.0'
+const APP_NAME = 'Ask Terminal'
+const APP_VERSION = version
+const APP_TAGLINE = 'a command-line with training wheels'
 
 function close() {
   emit('close')
@@ -47,9 +51,9 @@ function handleOverlayClick(e: MouseEvent) {
         </div>
 
         <!-- App Info -->
-        <h1 class="app-name">AskTerminal</h1>
+        <h1 class="app-name">{{ APP_NAME }}</h1>
         <p class="version">Version {{ APP_VERSION }}</p>
-        <p class="tagline">A beginner-friendly terminal with explanations</p>
+        <p class="tagline">{{ APP_TAGLINE }}</p>
 
         <!-- Description -->
         <div class="about-section">

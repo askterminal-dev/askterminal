@@ -60,6 +60,8 @@ declare global {
   interface Window {
     electron: {
       pty: typeof ptyAPI
+      fs: typeof fsAPI
+      app: typeof appAPI
     }
   }
 }

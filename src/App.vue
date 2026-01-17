@@ -5,10 +5,8 @@ import DraftPanel from './components/DraftPanel.vue'
 import InfoPanel from './components/InfoPanel.vue'
 import AboutModal from './components/AboutModal.vue'
 import SettingsModal from './components/SettingsModal.vue'
-import { useTerminalStore } from './stores/terminal'
 import { useUIStore } from './stores/ui'
 
-const terminalStore = useTerminalStore()
 const uiStore = useUIStore()
 
 // Modal visibility state
@@ -57,7 +55,7 @@ function closeSettingsModal() {
     <!-- Window Title Bar (drag region for hiddenInset style) -->
     <div class="title-bar drag-region">
       <div class="text-sm text-gray-600">
-        {{ terminalStore.cwd }}
+        Ask Terminal - a command-line with training wheels
       </div>
     </div>
 

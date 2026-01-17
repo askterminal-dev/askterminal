@@ -3,10 +3,12 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { useSettingsStore } from '../stores/settings'
+import { useTerminalStore } from '../stores/terminal'
 import '@xterm/xterm/css/xterm.css'
 
 const terminalContainer = ref<HTMLDivElement | null>(null)
 const settingsStore = useSettingsStore()
+const terminalStore = useTerminalStore()
 let terminal: Terminal | null = null
 let fitAddon: FitAddon | null = null
 let inputDisposable: { dispose: () => void } | null = null
@@ -61,6 +63,13 @@ onMounted(() => {
   // Open terminal in container
   terminal.open(terminalContainer.value)
 
+  // Write welcome message
+  const levelDisplay = settingsStore.skillLevel.charAt(0).toUpperCase() + settingsStore.skillLevel.slice(1)
+  terminal.writeln('\x1b[1;32mWelcome to Ask Terminal!\x1b[0m')
+  terminal.writeln(`Mode: ${levelDisplay}`)
+  terminal.writeln('Type a command below to get started...')
+  terminal.writeln('')
+
   // Fit after layout is complete
   requestAnimationFrame(() => {
     fitAddon?.fit()
@@ -76,6 +85,8 @@ onMounted(() => {
   window.electron.pty.onData((data) => {
     terminal?.write(data)
     terminal?.scrollToBottom()
+    // Process output to detect prompts and mode changes
+    terminalStore.processPtyOutput(data)
   })
 
   window.electron.pty.onExit((code) => {
