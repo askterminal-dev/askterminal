@@ -2,11 +2,14 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import TerminalView from './components/TerminalView.vue'
 import DraftPanel from './components/DraftPanel.vue'
+import InfoPanel from './components/InfoPanel.vue'
 import AboutModal from './components/AboutModal.vue'
 import SettingsModal from './components/SettingsModal.vue'
 import { useTerminalStore } from './stores/terminal'
+import { useUIStore } from './stores/ui'
 
 const terminalStore = useTerminalStore()
+const uiStore = useUIStore()
 
 // Modal visibility state
 const showAboutModal = ref(false)
@@ -17,6 +20,9 @@ let removeAboutListener: (() => void) | null = null
 let removeSettingsListener: (() => void) | null = null
 
 onMounted(() => {
+  // Load UI state from localStorage
+  uiStore.loadUIState()
+
   // Listen for About modal trigger from menu
   if (window.electron?.app?.onShowAboutModal) {
     removeAboutListener = window.electron.app.onShowAboutModal(() => {
@@ -55,13 +61,22 @@ function closeSettingsModal() {
       </div>
     </div>
 
-    <!-- Terminal Region -->
-    <div class="terminal-region">
-      <TerminalView />
-    </div>
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <!-- Left Column: Terminal + Draft -->
+      <div class="left-column">
+        <!-- Terminal Region -->
+        <div class="terminal-region">
+          <TerminalView />
+        </div>
 
-    <!-- Draft Panel -->
-    <DraftPanel @open-settings="showSettingsModal = true" />
+        <!-- Draft Panel -->
+        <DraftPanel @open-settings="showSettingsModal = true" />
+      </div>
+
+      <!-- Right Column: Info Panel -->
+      <InfoPanel @open-settings="showSettingsModal = true" />
+    </div>
 
     <!-- Modals -->
     <AboutModal
@@ -79,7 +94,7 @@ function closeSettingsModal() {
 .app-layout {
   height: 100%;
   display: grid;
-  grid-template-rows: 32px 1fr auto;
+  grid-template-rows: 32px 1fr;
   overflow: hidden;
 }
 
@@ -90,7 +105,22 @@ function closeSettingsModal() {
   justify-content: center;
 }
 
+.main-content {
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.left-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
 .terminal-region {
+  flex: 1;
   overflow: hidden;
   min-height: 0;
 }
