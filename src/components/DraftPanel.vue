@@ -139,6 +139,12 @@ async function executeCommand(cmd: string) {
   terminalStore.setIsRunning(true)
   terminalStore.addToHistory(cmd)
 
+  // Check if this is an interactive command
+  const interactiveType = terminalStore.detectInteractiveCommand(cmd)
+  if (interactiveType) {
+    terminalStore.setInteractiveMode(interactiveType)
+  }
+
   // Send command to PTY (with newline to execute)
   await window.electron.pty.write(cmd + '\n')
 
@@ -150,6 +156,171 @@ async function executeCommand(cmd: string) {
     inputRef.value?.focus()
   }, 50)
 }
+
+// Interactive mode controls
+const interactiveControls = {
+  pager: [
+    { keyLabel: 'j', action: 'Down', key: 'j', title: 'Scroll down one line (or arrow down)' },
+    { keyLabel: 'k', action: 'Up', key: 'k', title: 'Scroll up one line (or arrow up)' },
+    { keyLabel: '␣', action: 'Page Down', key: ' ', title: 'Scroll down one page' },
+    { keyLabel: 'b', action: 'Page Up', key: 'b', title: 'Scroll up one page' },
+    { keyLabel: '/', action: 'Search', key: '/', title: 'Search in document' },
+    { keyLabel: 'n', action: 'Next Match', key: 'n', title: 'Jump to next search result' },
+    { keyLabel: 'q', action: 'Quit', key: 'q', title: 'Quit and return to terminal' },
+  ],
+  'editor-vim': [
+    { keyLabel: 'Esc', action: '', key: '\x1b', title: 'Exit insert mode' },
+    { keyLabel: ':q!', action: 'Quit', key: ':q!\n', title: 'Quit without saving' },
+    { keyLabel: ':wq', action: 'Save & Quit', key: ':wq\n', title: 'Save and quit' },
+  ],
+  'editor-nano': [
+    { keyLabel: 'Ctrl+X', action: 'Exit', key: '\x18', title: 'Exit nano' },
+    { keyLabel: 'Ctrl+O', action: 'Save', key: '\x0f', title: 'Save file' },
+  ],
+  monitor: [
+    { keyLabel: 'q', action: 'Quit', key: 'q', title: 'Quit' },
+    { keyLabel: 'k', action: 'Kill', key: 'k', title: 'Kill a process' },
+  ],
+}
+
+// Send a key to the PTY (for interactive mode)
+async function sendKey(key: string) {
+  await window.electron.pty.write(key)
+}
+
+// Exit interactive mode
+async function exitInteractiveMode() {
+  const mode = terminalStore.interactiveMode
+  if (mode === 'pager') {
+    await sendKey('q')
+  } else if (mode === 'editor-vim') {
+    await sendKey('\x1b:q!\n')
+  } else if (mode === 'editor-nano') {
+    await sendKey('\x18')
+  } else if (mode === 'monitor') {
+    await sendKey('q')
+  }
+  terminalStore.setInteractiveMode(null)
+}
+
+// Search input mode for pagers
+const isSearchMode = ref(false)
+const searchQuery = ref('')
+const searchInputRef = ref<HTMLInputElement | null>(null)
+
+function startSearch() {
+  isSearchMode.value = true
+  // Send "/" to start search in less/man
+  sendKey('/')
+  nextTick(() => {
+    searchInputRef.value?.focus()
+  })
+}
+
+async function submitSearch() {
+  if (searchQuery.value) {
+    await sendKey(searchQuery.value + '\n')
+  } else {
+    // Cancel search with Escape
+    await sendKey('\x1b')
+  }
+  isSearchMode.value = false
+  searchQuery.value = ''
+}
+
+function cancelSearch() {
+  sendKey('\x1b')
+  isSearchMode.value = false
+  searchQuery.value = ''
+}
+
+// Y/n prompt responses
+async function sendYes() {
+  await sendKey('y\n')
+  terminalStore.setPromptMode(null)
+}
+
+async function sendNo() {
+  await sendKey('n\n')
+  terminalStore.setPromptMode(null)
+}
+
+// Keyboard handling for interactive mode
+const activeKey = ref<string | null>(null)
+const interactiveContainerRef = ref<HTMLDivElement | null>(null)
+
+// Map keyboard keys to control keys
+const keyMap: Record<string, string> = {
+  j: 'j',
+  k: 'k',
+  ArrowDown: 'j',  // Arrow down = scroll down (same as j)
+  ArrowUp: 'k',    // Arrow up = scroll up (same as k)
+  ' ': ' ',
+  b: 'b',
+  '/': '/',
+  n: 'n',
+  q: 'q',
+  y: 'y',
+  Escape: '\x1b',
+}
+
+async function handleInteractiveKeydown(e: KeyboardEvent) {
+  const key = e.key
+
+  // Handle Y/n prompt mode
+  if (terminalStore.promptMode === 'yesno') {
+    if (key.toLowerCase() === 'y') {
+      e.preventDefault()
+      activeKey.value = 'y'
+      await sendYes()
+      setTimeout(() => activeKey.value = null, 150)
+    } else if (key.toLowerCase() === 'n') {
+      e.preventDefault()
+      activeKey.value = 'n'
+      await sendNo()
+      setTimeout(() => activeKey.value = null, 150)
+    }
+    return
+  }
+
+  // Handle interactive mode
+  if (terminalStore.interactiveMode && !isSearchMode.value) {
+    const controls = interactiveControls[terminalStore.interactiveMode]
+    const control = controls?.find(c => c.key === key || c.key === keyMap[key])
+
+    if (control) {
+      e.preventDefault()
+      activeKey.value = control.key
+
+      if (control.key === '/') {
+        startSearch()
+      } else if (control.key === 'q') {
+        await exitInteractiveMode()
+      } else {
+        await sendKey(control.key)
+      }
+
+      setTimeout(() => activeKey.value = null, 150)
+    }
+  }
+}
+
+// Auto-focus interactive container when mode changes
+watch(() => terminalStore.interactiveMode, (mode) => {
+  if (mode) {
+    nextTick(() => {
+      interactiveContainerRef.value?.focus()
+    })
+  }
+})
+
+watch(() => terminalStore.promptMode, (mode) => {
+  if (mode) {
+    nextTick(() => {
+      interactiveContainerRef.value?.focus()
+    })
+  }
+})
 
 // Run the command (with skill level checks)
 async function runCommand() {
@@ -275,38 +446,114 @@ watch(inputRef, (el) => {
 
 <template>
   <div class="draft-panel">
-    <!-- Command Input Row -->
-    <div class="flex items-center gap-3 mb-3">
-      <span class="text-gray-500 font-mono">$</span>
-      <input
-        ref="inputRef"
-        v-model="terminalStore.draftCommand"
-        type="text"
-        class="flex-1 font-mono text-lg bg-transparent outline-none"
-        placeholder="Type a command..."
-        @keydown="handleKeydown"
-        :disabled="terminalStore.isRunning"
-      />
-      <button
-        @click="sendInterrupt"
-        class="px-3 py-2 bg-gray-200 text-gray-600 rounded-md font-medium hover:bg-gray-300 transition-colors"
-        title="Send Ctrl+C to stop running process"
-      >
-        Stop
-      </button>
-      <button
-        @click="runCommand"
-        :disabled="!terminalStore.draftCommand.trim() || terminalStore.isRunning || commandStatus.action === 'block'"
-        :class="[
-          'px-4 py-2 rounded-md font-medium transition-colors',
-          commandStatus.action === 'block'
-            ? 'bg-red-100 text-red-400 cursor-not-allowed'
-            : 'bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed'
-        ]"
-      >
-        {{ commandStatus.action === 'block' ? 'Blocked' : 'Run' }}
-      </button>
+    <!-- Y/n Prompt Mode -->
+    <div v-if="terminalStore.promptMode === 'yesno'" class="interactive-controls" tabindex="0" @keydown="handleInteractiveKeydown" ref="interactiveContainerRef">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-gray-600 text-sm font-medium">
+          Prompt: Waiting for response...
+        </span>
+      </div>
+      <p class="text-gray-700 mb-3">{{ terminalStore.promptQuestion }}</p>
+      <div class="flex gap-3">
+        <button
+          @click="sendYes"
+          :class="['interactive-key flex-1', activeKey === 'y' && 'active']"
+        >
+          Yes (Y)
+        </button>
+        <button
+          @click="sendNo"
+          :class="['interactive-key flex-1', activeKey === 'n' && 'active']"
+        >
+          No (N)
+        </button>
+      </div>
+      <p class="text-gray-400 text-xs mt-3">Press Y or N to respond</p>
     </div>
+
+    <!-- Interactive Mode Controls -->
+    <div v-else-if="terminalStore.interactiveMode" class="interactive-controls" tabindex="0" @keydown="handleInteractiveKeydown" ref="interactiveContainerRef">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-gray-600 text-sm font-medium">
+          Interactive Mode: {{ terminalStore.interactiveMode === 'pager' ? 'Pager (man/less)' :
+                              terminalStore.interactiveMode === 'editor-vim' ? 'Vim Editor' :
+                              terminalStore.interactiveMode === 'editor-nano' ? 'Nano Editor' : 'Monitor' }}
+        </span>
+        <button
+          @click="exitInteractiveMode"
+          class="px-3 py-1.5 bg-red-500 text-white rounded-md text-sm font-medium hover:bg-red-600 transition-colors"
+        >
+          Exit '{{ terminalStore.interactiveMode === 'pager' ? 'man/less' :
+                   terminalStore.interactiveMode === 'editor-vim' ? 'vim' :
+                   terminalStore.interactiveMode === 'editor-nano' ? 'nano' : 'top' }}'
+        </button>
+      </div>
+
+      <!-- Search Input Mode -->
+      <div v-if="isSearchMode" class="flex items-center gap-2 mb-3">
+        <span class="text-gray-500 font-mono">/</span>
+        <input
+          ref="searchInputRef"
+          v-model="searchQuery"
+          type="text"
+          class="flex-1 font-mono bg-gray-100 border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500"
+          placeholder="Search..."
+          @keydown.enter="submitSearch"
+          @keydown.escape="cancelSearch"
+        />
+        <button @click="submitSearch" class="interactive-key">Search</button>
+        <button @click="cancelSearch" class="interactive-key">Cancel</button>
+      </div>
+
+      <!-- Control Buttons -->
+      <div v-else class="flex flex-wrap gap-2">
+        <button
+          v-for="control in interactiveControls[terminalStore.interactiveMode]"
+          :key="control.keyLabel"
+          @click="control.key === '/' ? startSearch() : control.key === 'q' ? exitInteractiveMode() : sendKey(control.key)"
+          :class="['interactive-key', activeKey === control.key && 'active']"
+          :title="control.title"
+        >
+          <span class="font-bold">{{ control.keyLabel }}</span><span v-if="control.action">&nbsp;&nbsp;{{ control.action }}</span>
+        </button>
+      </div>
+      <p class="text-gray-400 text-xs mt-3">Press keys or click buttons to navigate</p>
+    </div>
+
+    <!-- Normal Command Input Mode -->
+    <template v-else>
+      <!-- Command Input Row -->
+      <div class="flex items-center gap-3 mb-3">
+        <span class="text-gray-500 font-mono">$</span>
+        <input
+          ref="inputRef"
+          v-model="terminalStore.draftCommand"
+          type="text"
+          class="flex-1 font-mono text-lg bg-transparent outline-none"
+          placeholder="Type a command..."
+          @keydown="handleKeydown"
+          :disabled="terminalStore.isRunning"
+        />
+        <button
+          @click="sendInterrupt"
+          class="px-3 py-2 bg-gray-200 text-gray-600 rounded-md font-medium hover:bg-gray-300 transition-colors"
+          title="Send Ctrl+C to stop running process"
+        >
+          Stop
+        </button>
+        <button
+          @click="runCommand"
+          :disabled="!terminalStore.draftCommand.trim() || terminalStore.isRunning || commandStatus.action === 'block'"
+          :class="[
+            'px-4 py-2 rounded-md font-medium transition-colors',
+            commandStatus.action === 'block'
+              ? 'bg-red-100 text-red-400 cursor-not-allowed'
+              : 'bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed'
+          ]"
+        >
+          {{ commandStatus.action === 'block' ? 'Blocked' : 'Run' }}
+        </button>
+      </div>
 
     <!-- Explanation Area -->
     <div v-if="commandInfo && !isUnknownCommand" class="space-y-2">
@@ -401,6 +648,7 @@ watch(inputRef, (el) => {
         >{{ cmd }}</button>
       </div>
     </div>
+    </template>
 
     <!-- Skill Level Indicator (fixed position) -->
     <button
@@ -486,5 +734,38 @@ watch(inputRef, (el) => {
   font-size: 12px;
   color: #6b7280;
   font-weight: 500;
+}
+
+.interactive-controls {
+  padding: 4px 0;
+}
+
+.interactive-key {
+  padding: 8px 16px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+
+.interactive-key:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.interactive-key:active,
+.interactive-key.active {
+  background: #d1d5db;
+  transform: scale(0.98);
+  border-color: #6b7280;
+}
+
+.interactive-controls:focus {
+  outline: none;
 }
 </style>
