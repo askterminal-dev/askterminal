@@ -37,7 +37,10 @@ function goToIndex() {
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
           </button>
-          <span class="panel-title">{{ currentGuide.title }}</span>
+          <div class="panel-title-group">
+            <span class="panel-title">{{ currentGuide.title }}</span>
+            <span v-if="currentGuide.subtitle" class="panel-subtitle">{{ currentGuide.subtitle }}</span>
+          </div>
           <button class="menu-btn" @click="goToIndex" title="All guides">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="3" y1="6" x2="21" y2="6"/>
@@ -63,7 +66,10 @@ function goToIndex() {
               class="guide-card"
               @click="selectGuide(guide.id)"
             >
-              <span class="guide-card-title">{{ guide.title }}</span>
+              <div class="guide-card-text">
+                <span class="guide-card-title">{{ guide.title }}</span>
+                <span v-if="guide.subtitle" class="guide-card-subtitle">{{ guide.subtitle }}</span>
+              </div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
@@ -144,11 +150,22 @@ function goToIndex() {
   border-bottom: 1px solid #e5e7eb;
 }
 
-.panel-title {
+.panel-title-group {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.panel-title {
   font-size: 15px;
   font-weight: 600;
   color: #111827;
+}
+
+.panel-subtitle {
+  font-size: 12px;
+  color: #6b7280;
 }
 
 .back-btn {
@@ -226,10 +243,21 @@ function goToIndex() {
   border-color: #d1d5db;
 }
 
+.guide-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .guide-card-title {
   font-size: 14px;
   font-weight: 500;
   color: #111827;
+}
+
+.guide-card-subtitle {
+  font-size: 12px;
+  color: #9ca3af;
 }
 
 .guide-card svg {

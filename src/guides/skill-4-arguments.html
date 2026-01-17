@@ -1,0 +1,89 @@
+<h2>Intro to Command Arguments</h2>
+
+<p>
+  Most commands need to know <em>what</em> to act on. This "what" is called
+  an <strong>argument</strong>.
+</p>
+
+<section>
+  <h3>What Are Arguments?</h3>
+  <p>
+    An argument tells the command what file, folder, or text to work with:
+  </p>
+  <div class="command-example">
+    <code>cat notes.txt</code>
+    <p><code>notes.txt</code> is the argument — the file to display.</p>
+  </div>
+  <div class="command-example">
+    <code>cd Documents</code>
+    <p><code>Documents</code> is the argument — the folder to enter.</p>
+  </div>
+</section>
+
+<section>
+  <h3>Commands Without Arguments</h3>
+  <p>
+    Some commands work fine without arguments — they have sensible defaults:
+  </p>
+  <div class="command-example">
+    <code>ls</code>
+    <p>Lists the current directory (no argument needed).</p>
+  </div>
+  <div class="command-example">
+    <code>pwd</code>
+    <p>Shows current location (never needs an argument).</p>
+  </div>
+</section>
+
+<section>
+  <h3>Commands With Arguments</h3>
+  <p>
+    Adding an argument changes what the command operates on:
+  </p>
+  <div class="command-example">
+    <code>ls Documents</code>
+    <p>Lists the Documents folder instead of the current directory.</p>
+  </div>
+  <div class="command-example">
+    <code>cat ~/.zshrc</code>
+    <p>Displays your shell configuration file.</p>
+  </div>
+</section>
+
+<section>
+  <h3>Multiple Arguments</h3>
+  <p>
+    Many commands accept multiple arguments:
+  </p>
+  <div class="command-example">
+    <code>cat file1.txt file2.txt</code>
+    <p>Displays both files, one after the other.</p>
+  </div>
+  <div class="command-example">
+    <code>ls Documents Downloads</code>
+    <p>Lists both folders.</p>
+  </div>
+</section>
+
+<section>
+  <h3>Paths as Arguments</h3>
+  <p>
+    Arguments are often file or folder paths:
+  </p>
+  <ul>
+    <li><code>file.txt</code> — file in current directory</li>
+    <li><code>Documents/file.txt</code> — relative path</li>
+    <li><code>/Users/you/file.txt</code> — absolute path (starts with /)</li>
+    <li><code>~/file.txt</code> — in your home folder (~ means home)</li>
+  </ul>
+</section>
+
+<section>
+  <h3>Practice</h3>
+  <ol>
+    <li><kbd>ls</kbd> — list current directory</li>
+    <li><kbd>ls ~</kbd> — list your home folder</li>
+    <li><kbd>cat ~/.zshrc</kbd> — view your shell config</li>
+    <li><kbd>echo Hello World</kbd> — echo takes text as arguments</li>
+  </ol>
+</section>

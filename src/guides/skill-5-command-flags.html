@@ -1,0 +1,79 @@
+<h2>Modifying Commands with Flags</h2>
+
+<p>
+  Commands often accept <strong>flags</strong> (also called options) that modify
+  their behavior. Flags start with a dash (<code>-</code>).
+</p>
+
+<section>
+  <h3>What Are Flags?</h3>
+  <p>
+    A flag is an extra instruction you add to a command. For example:
+  </p>
+  <div class="command-example">
+    <code>ls -l</code>
+    <p>The <code>-l</code> flag tells <code>ls</code> to show the "long" format with details.</p>
+  </div>
+</section>
+
+<section>
+  <h3>Common Flag Patterns</h3>
+  <p><strong>Single letter flags</strong> use one dash:</p>
+  <div class="command-example">
+    <code>ls -a</code>
+    <p>Show all files, including hidden ones (starting with a dot).</p>
+  </div>
+
+  <p><strong>Combine multiple flags</strong> together:</p>
+  <div class="command-example">
+    <code>ls -la</code>
+    <p>Same as <code>ls -l -a</code> — long format AND show hidden files.</p>
+  </div>
+
+  <p><strong>Word flags</strong> use two dashes:</p>
+  <div class="command-example">
+    <code>ls --all</code>
+    <p>Same as <code>ls -a</code> — the word version is easier to remember.</p>
+  </div>
+</section>
+
+<section>
+  <h3>Flags with Values</h3>
+  <p>
+    Some flags take a value after them:
+  </p>
+  <div class="command-example">
+    <code>head -n 5 file.txt</code>
+    <p>The <code>-n 5</code> tells <code>head</code> to show only 5 lines.</p>
+  </div>
+</section>
+
+<section>
+  <h3>Getting Help</h3>
+  <p>
+    Most commands show their available flags with <code>--help</code>:
+  </p>
+  <div class="command-example">
+    <code>ls --help</code>
+    <p>Shows all flags and options for the <code>ls</code> command.</p>
+  </div>
+  <p>
+    For detailed documentation, use the manual:
+  </p>
+  <div class="command-example">
+    <code>man ls</code>
+    <p>Opens the full manual. Press <kbd>q</kbd> to exit.</p>
+  </div>
+</section>
+
+<section>
+  <h3>Practice</h3>
+  <p>Try these variations of <code>ls</code>:</p>
+  <ol>
+    <li><kbd>ls</kbd> — basic list</li>
+    <li><kbd>ls -l</kbd> — long format with details</li>
+    <li><kbd>ls -a</kbd> — include hidden files</li>
+    <li><kbd>ls -la</kbd> — both together</li>
+    <li><kbd>ls -lh</kbd> — long format with human-readable sizes</li>
+  </ol>
+</section>
