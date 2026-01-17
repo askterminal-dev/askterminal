@@ -1,6 +1,6 @@
 {
   "name": "ask-terminal",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Beginner-friendly terminal with contextual explanations and safety indicators",
   "main": "dist-electron/main.js",
   "scripts": {
