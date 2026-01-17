@@ -4,7 +4,7 @@ import { ref } from 'vue'
 export const useUIStore = defineStore('ui', () => {
   // State
   const showInfoPanel = ref(true)
-  const currentGuideId = ref('welcome')
+  const currentGuideId = ref<string | null>('welcome') // null = show guides index
 
   // Load UI state from localStorage
   function loadUIState() {
@@ -13,7 +13,8 @@ export const useUIStore = defineStore('ui', () => {
       try {
         const state = JSON.parse(saved)
         showInfoPanel.value = state.showInfoPanel ?? true
-        currentGuideId.value = state.currentGuideId ?? 'welcome'
+        // Preserve null (guides index) vs undefined (default to welcome)
+        currentGuideId.value = 'currentGuideId' in state ? state.currentGuideId : 'welcome'
       } catch (e) {
         // Ignore parse errors
       }
@@ -40,9 +41,15 @@ export const useUIStore = defineStore('ui', () => {
     saveUIState()
   }
 
-  // Set current guide
-  function setCurrentGuide(guideId: string) {
+  // Set current guide (null = show guides index)
+  function setCurrentGuide(guideId: string | null) {
     currentGuideId.value = guideId
+    saveUIState()
+  }
+
+  // Go to guides index
+  function showGuidesIndex() {
+    currentGuideId.value = null
     saveUIState()
   }
 
@@ -55,6 +62,7 @@ export const useUIStore = defineStore('ui', () => {
     saveUIState,
     toggleInfoPanel,
     setInfoPanelVisible,
-    setCurrentGuide
+    setCurrentGuide,
+    showGuidesIndex
   }
 })

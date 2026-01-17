@@ -1,26 +1,21 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useUIStore } from '../stores/ui'
 import { guides, getGuide } from '../guides'
 
 const uiStore = useUIStore()
-const showMenu = ref(false)
 
 const currentGuide = computed(() => {
-  return getGuide(uiStore.currentGuideId) || guides[0]
+  if (!uiStore.currentGuideId) return null
+  return getGuide(uiStore.currentGuideId) || null
 })
 
 function selectGuide(guideId: string) {
   uiStore.setCurrentGuide(guideId)
-  showMenu.value = false
 }
 
-function toggleMenu() {
-  showMenu.value = !showMenu.value
-}
-
-function closeMenu() {
-  showMenu.value = false
+function goToIndex() {
+  uiStore.showGuidesIndex()
 }
 </script>
 
@@ -34,36 +29,48 @@ function closeMenu() {
       {{ uiStore.showInfoPanel ? '›' : '‹' }}
     </button>
     <div class="panel-content" v-show="uiStore.showInfoPanel">
-      <!-- Header with hamburger menu -->
-      <div class="panel-header">
-        <span class="panel-title">{{ currentGuide.title }}</span>
-        <button class="menu-btn" @click="toggleMenu" title="Select guide">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="3" y1="6" x2="21" y2="6"/>
-            <line x1="3" y1="12" x2="21" y2="12"/>
-            <line x1="3" y1="18" x2="21" y2="18"/>
-          </svg>
-        </button>
+      <!-- Guide Content View -->
+      <template v-if="currentGuide">
+        <div class="panel-header">
+          <button class="back-btn" @click="goToIndex" title="Back to guides">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <span class="panel-title">{{ currentGuide.title }}</span>
+          <button class="menu-btn" @click="goToIndex" title="All guides">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="guide-content" v-html="currentGuide.content"></div>
+      </template>
 
-        <!-- Dropdown menu -->
-        <div v-if="showMenu" class="menu-dropdown">
-          <div class="menu-backdrop" @click="closeMenu"></div>
-          <div class="menu-list">
+      <!-- Guides Index View -->
+      <template v-else>
+        <div class="panel-header">
+          <span class="panel-title">Guides</span>
+        </div>
+        <div class="guides-index">
+          <p class="index-intro">Learn the command line step by step.</p>
+          <div class="guide-list">
             <button
               v-for="guide in guides"
               :key="guide.id"
-              class="menu-item"
-              :class="{ active: guide.id === currentGuide.id }"
+              class="guide-card"
               @click="selectGuide(guide.id)"
             >
-              {{ guide.title }}
+              <span class="guide-card-title">{{ guide.title }}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
             </button>
           </div>
         </div>
-      </div>
-
-      <!-- Guide content -->
-      <div class="guide-content" v-html="currentGuide.content"></div>
+      </template>
     </div>
   </div>
 </template>
@@ -127,21 +134,41 @@ function closeMenu() {
   border-radius: 3px;
 }
 
-/* Header with menu */
+/* Header */
 .panel-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid #e5e7eb;
-  position: relative;
 }
 
 .panel-title {
+  flex: 1;
   font-size: 15px;
   font-weight: 600;
   color: #111827;
+}
+
+.back-btn {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.back-btn:hover {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+  color: #374151;
 }
 
 .menu-btn {
@@ -164,51 +191,55 @@ function closeMenu() {
   color: #374151;
 }
 
-/* Dropdown menu */
-.menu-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
+/* Guides Index */
+.guides-index {
+  flex: 1;
 }
 
-.menu-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: 101;
+.index-intro {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 16px 0;
 }
 
-.menu-list {
-  margin-top: 4px;
+.guide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.guide-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  min-width: 200px;
-}
-
-.menu-item {
-  display: block;
-  width: 100%;
-  padding: 10px 14px;
-  background: transparent;
-  border: none;
-  text-align: left;
-  font-size: 13px;
-  color: #374151;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.15s;
+  text-align: left;
 }
 
-.menu-item:hover {
-  background: #f3f4f6;
+.guide-card:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
 }
 
-.menu-item.active {
-  background: #eff6ff;
-  color: #1d4ed8;
+.guide-card-title {
+  font-size: 14px;
   font-weight: 500;
+  color: #111827;
+}
+
+.guide-card svg {
+  color: #9ca3af;
+  transition: transform 0.15s;
+}
+
+.guide-card:hover svg {
+  color: #6b7280;
+  transform: translateX(2px);
 }
 
 /* Guide content styles */
@@ -233,6 +264,10 @@ function closeMenu() {
   margin: 16px 0 8px 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.guide-content section:first-child h3 {
+  margin-top: 0;
 }
 
 .guide-content p {
