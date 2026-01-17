@@ -55,7 +55,7 @@ function closeSettingsModal() {
     <!-- Window Title Bar (drag region for hiddenInset style) -->
     <div class="title-bar drag-region">
       <div class="text-sm text-gray-600">
-        Ask Terminal - a command-line with training wheels
+        Ask Terminal - a command line with training wheels
       </div>
     </div>
 

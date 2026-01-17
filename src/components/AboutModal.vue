@@ -11,7 +11,7 @@ const emit = defineEmits<{
 
 const APP_NAME = 'Ask Terminal'
 const APP_VERSION = version
-const APP_TAGLINE = 'a command-line with training wheels'
+const APP_TAGLINE = 'a command line with training wheels'
 
 function close() {
   emit('close')

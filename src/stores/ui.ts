@@ -4,6 +4,7 @@ import { ref } from 'vue'
 export const useUIStore = defineStore('ui', () => {
   // State
   const showInfoPanel = ref(true)
+  const currentGuideId = ref('welcome')
 
   // Load UI state from localStorage
   function loadUIState() {
@@ -12,6 +13,7 @@ export const useUIStore = defineStore('ui', () => {
       try {
         const state = JSON.parse(saved)
         showInfoPanel.value = state.showInfoPanel ?? true
+        currentGuideId.value = state.currentGuideId ?? 'welcome'
       } catch (e) {
         // Ignore parse errors
       }
@@ -21,7 +23,8 @@ export const useUIStore = defineStore('ui', () => {
   // Save UI state to localStorage
   function saveUIState() {
     localStorage.setItem('askterminal-ui', JSON.stringify({
-      showInfoPanel: showInfoPanel.value
+      showInfoPanel: showInfoPanel.value,
+      currentGuideId: currentGuideId.value
     }))
   }
 
@@ -37,13 +40,21 @@ export const useUIStore = defineStore('ui', () => {
     saveUIState()
   }
 
+  // Set current guide
+  function setCurrentGuide(guideId: string) {
+    currentGuideId.value = guideId
+    saveUIState()
+  }
+
   return {
     // State
     showInfoPanel,
+    currentGuideId,
     // Methods
     loadUIState,
     saveUIState,
     toggleInfoPanel,
-    setInfoPanelVisible
+    setInfoPanelVisible,
+    setCurrentGuide
   }
 })
