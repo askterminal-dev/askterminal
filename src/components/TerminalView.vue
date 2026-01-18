@@ -4,11 +4,13 @@ import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { useSettingsStore } from '../stores/settings'
 import { useTerminalStore } from '../stores/terminal'
+import { useClaudeStore } from '../stores/claude'
 import '@xterm/xterm/css/xterm.css'
 
 const terminalContainer = ref<HTMLDivElement | null>(null)
 const settingsStore = useSettingsStore()
 const terminalStore = useTerminalStore()
+const claudeStore = useClaudeStore()
 let terminal: Terminal | null = null
 let fitAddon: FitAddon | null = null
 let inputDisposable: { dispose: () => void } | null = null
@@ -87,6 +89,8 @@ onMounted(() => {
     terminal?.scrollToBottom()
     // Process output to detect prompts and mode changes
     terminalStore.processPtyOutput(data)
+    // Process output for Claude session detection
+    claudeStore.processClaudeOutput(data)
   })
 
   window.electron.pty.onExit((code) => {

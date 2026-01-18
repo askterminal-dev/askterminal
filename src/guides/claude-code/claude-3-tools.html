@@ -1,0 +1,89 @@
+<h2>Understanding Claude's Tools</h2>
+
+<p>
+  Claude Code uses "tools" to interact with your computer.
+  When you see Claude using a tool, it's being transparent about what it's doing.
+</p>
+
+<section>
+  <h3>What Are Tools?</h3>
+  <p>
+    Tools are specific actions Claude can take. Instead of just talking,
+    Claude can actually read files, write code, and run commands.
+  </p>
+  <p>
+    You'll see tool names appear as Claude works — this is good!
+    It means you can see exactly what's happening.
+  </p>
+</section>
+
+<section>
+  <h3>Reading Tools</h3>
+  <div class="safety-item">
+    <span class="safety-dot safe"></span>
+    <span><strong>Read</strong> — Opens and reads a file's contents</span>
+  </div>
+  <div class="safety-item">
+    <span class="safety-dot safe"></span>
+    <span><strong>Glob</strong> — Finds files matching a pattern (like *.js)</span>
+  </div>
+  <div class="safety-item">
+    <span class="safety-dot safe"></span>
+    <span><strong>Grep</strong> — Searches file contents for specific text</span>
+  </div>
+  <p>
+    These tools only look at things — they don't change anything.
+  </p>
+</section>
+
+<section>
+  <h3>Writing Tools</h3>
+  <div class="safety-item">
+    <span class="safety-dot moderate"></span>
+    <span><strong>Write</strong> — Creates a new file or replaces an existing one</span>
+  </div>
+  <div class="safety-item">
+    <span class="safety-dot moderate"></span>
+    <span><strong>Edit</strong> — Makes targeted changes to part of a file</span>
+  </div>
+  <p>
+    These tools modify your code. Claude will show you what it plans to change
+    and ask for permission first.
+  </p>
+</section>
+
+<section>
+  <h3>Command Tools</h3>
+  <div class="safety-item">
+    <span class="safety-dot moderate"></span>
+    <span><strong>Bash</strong> — Runs a terminal command</span>
+  </div>
+  <p>
+    Claude can run commands like <code>npm install</code> or <code>git status</code>.
+    It will show you the command before running it.
+  </p>
+</section>
+
+<section>
+  <h3>Research Tools</h3>
+  <div class="safety-item">
+    <span class="safety-dot safe"></span>
+    <span><strong>WebSearch</strong> — Searches the web for information</span>
+  </div>
+  <div class="safety-item">
+    <span class="safety-dot safe"></span>
+    <span><strong>WebFetch</strong> — Retrieves content from a specific URL</span>
+  </div>
+  <p>
+    Claude can look up documentation, examples, or current information online.
+  </p>
+</section>
+
+<section>
+  <h3>Why This Matters</h3>
+  <p>
+    Seeing the tools helps you understand what Claude is doing and why.
+    If you see Claude using <strong>Read</strong> on several files before answering,
+    it's gathering context. If you see <strong>Edit</strong>, it's about to change code.
+  </p>
+</section>
