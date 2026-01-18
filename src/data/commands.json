@@ -375,7 +375,7 @@
       "--resume": "resume a specific conversation",
       "--allowedTools": "restrict which tools Claude can use",
       "--model": "specify which Claude model to use",
-      "--dangerously-skip-permissions": "skip permission prompts (advanced users only)"
+      "--dangerously-skip-permissions": "DANGEROUS: disables permission prompts and may execute actions without confirmation. Can lead to unsafe or destructive operations. Use only if you fully understand and accept the risks."
     }
   }
 }
