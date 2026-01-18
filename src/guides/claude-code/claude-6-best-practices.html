@@ -1,0 +1,102 @@
+<h2>Best Practices</h2>
+
+<p>
+  Get better results from Claude Code by following these patterns.
+</p>
+
+<section>
+  <h3>Be Specific</h3>
+  <p>
+    Good prompts include context:
+  </p>
+  <ul>
+    <li><strong>Less helpful:</strong> "Fix the bug"</li>
+    <li><strong>More helpful:</strong> "Fix the null pointer error in UserService.getProfile()"</li>
+  </ul>
+  <p>
+    Mention file names, function names, error messages, and expected behavior.
+  </p>
+</section>
+
+<section>
+  <h3>Review Changes Before Accepting</h3>
+  <p>
+    When Claude shows you a diff (the changes it wants to make):
+  </p>
+  <ul>
+    <li>Read through the changes</li>
+    <li>Make sure they match what you asked for</li>
+    <li>Check that nothing unexpected is being modified</li>
+  </ul>
+  <p>
+    It's faster to catch issues before accepting than to fix them after.
+  </p>
+</section>
+
+<section>
+  <h3>Iterate and Refine</h3>
+  <p>
+    If the first result isn't perfect, guide Claude:
+  </p>
+  <ul>
+    <li>"Good, but use async/await instead of callbacks"</li>
+    <li>"Can you make this more concise?"</li>
+    <li>"Actually, put that in a separate file"</li>
+  </ul>
+  <p>
+    Claude learns from your feedback within the conversation.
+  </p>
+</section>
+
+<section>
+  <h3>Use Git Commits as Checkpoints</h3>
+  <p>
+    Create commits between major changes:
+  </p>
+  <ol>
+    <li>Ask Claude to make a change</li>
+    <li>Review and test it</li>
+    <li>Commit if it works</li>
+    <li>Move to the next change</li>
+  </ol>
+  <p>
+    This gives you safe points to return to.
+  </p>
+</section>
+
+<section>
+  <h3>Let Claude Explore First</h3>
+  <p>
+    For unfamiliar codebases, ask questions before requesting changes:
+  </p>
+  <ul>
+    <li>"How does authentication work in this app?"</li>
+    <li>"What would be the best place to add this feature?"</li>
+    <li>"Are there existing patterns I should follow?"</li>
+  </ul>
+</section>
+
+<section>
+  <h3>Break Down Large Tasks</h3>
+  <p>
+    Instead of "Rewrite the entire auth system":
+  </p>
+  <ol>
+    <li>"Explain the current auth flow"</li>
+    <li>"What are the problems with it?"</li>
+    <li>"Design a better approach"</li>
+    <li>"Implement step 1 of the new design"</li>
+  </ol>
+</section>
+
+<section>
+  <h3>Trust But Verify</h3>
+  <p>
+    Claude is helpful but not perfect. Always:
+  </p>
+  <ul>
+    <li>Run your tests after changes</li>
+    <li>Check that the app still works</li>
+    <li>Read the code Claude wrote — you own it now</li>
+  </ul>
+</section>

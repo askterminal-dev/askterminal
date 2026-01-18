@@ -358,5 +358,24 @@
     "description": "Create command shortcut",
     "safety": "safe",
     "flags": {}
+  },
+  "claude": {
+    "description": "Start Claude Code AI assistant",
+    "safety": "safe",
+    "flags": {
+      "--help": "show help and available options",
+      "-h": "show help (short form)",
+      "--version": "show installed version",
+      "-v": "show version (short form)",
+      "-p": "print mode (non-interactive)",
+      "--print": "print mode (non-interactive)",
+      "-c": "continue last conversation",
+      "--continue": "continue last conversation",
+      "-r": "resume a specific conversation",
+      "--resume": "resume a specific conversation",
+      "--allowedTools": "restrict which tools Claude can use",
+      "--model": "specify which Claude model to use",
+      "--dangerously-skip-permissions": "skip permission prompts (advanced users only)"
+    }
   }
 }

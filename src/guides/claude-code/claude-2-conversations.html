@@ -1,0 +1,83 @@
+<h2>Having Conversations with Claude</h2>
+
+<p>
+  Claude Code's interactive mode lets you have natural back-and-forth conversations
+  while working on your code.
+</p>
+
+<section>
+  <h3>Starting Interactive Mode</h3>
+  <p>
+    Type <kbd>claude</kbd> with no arguments to start a conversation:
+  </p>
+  <div class="command-example">
+    <code>claude</code>
+    <p>Opens an interactive session in your current directory</p>
+  </div>
+  <p>
+    You'll see Claude's prompt. Now you can type questions or requests naturally.
+  </p>
+</section>
+
+<section>
+  <h3>Asking Questions</h3>
+  <p>
+    In interactive mode, just type what you want to know:
+  </p>
+  <ul>
+    <li>"What does this project do?"</li>
+    <li>"Explain the main function in app.js"</li>
+    <li>"Why is this test failing?"</li>
+    <li>"How do I add a new route?"</li>
+  </ul>
+  <p>
+    Claude will read relevant files to give you informed answers.
+  </p>
+</section>
+
+<section>
+  <h3>Context Awareness</h3>
+  <p>
+    Claude remembers your conversation. You can refer back to earlier topics:
+  </p>
+  <ul>
+    <li>"Now fix the bug we discussed"</li>
+    <li>"Add tests for that function"</li>
+    <li>"Actually, use TypeScript instead"</li>
+  </ul>
+</section>
+
+<section>
+  <h3>Continuing Later</h3>
+  <p>
+    Resume your last conversation:
+  </p>
+  <div class="command-example">
+    <code>claude -c</code>
+    <p>Continue from where you left off</p>
+  </div>
+  <div class="command-example">
+    <code>claude -r</code>
+    <p>Pick from a list of past conversations to resume</p>
+  </div>
+</section>
+
+<section>
+  <h3>Exiting</h3>
+  <p>
+    When you're done, type one of these:
+  </p>
+  <ul>
+    <li><kbd>/exit</kbd> or <kbd>/quit</kbd> — Leave interactive mode</li>
+    <li><kbd>Ctrl</kbd>+<kbd>C</kbd> — Also exits (or stops current action)</li>
+  </ul>
+</section>
+
+<section>
+  <h3>Tips for Good Conversations</h3>
+  <ul>
+    <li><strong>Be specific</strong> — "Fix the login bug" is better than "fix bugs"</li>
+    <li><strong>Give context</strong> — Mention file names or function names when relevant</li>
+    <li><strong>Iterate</strong> — If the first answer isn't right, clarify what you need</li>
+  </ul>
+</section>

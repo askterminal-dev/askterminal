@@ -99,7 +99,12 @@ function getArgumentType(arg: string): string {
 /**
  * Build a human-readable description of the full command
  */
-function buildDescription(_cmd: string, def: CommandDef, args: string[]): string {
+function buildDescription(cmd: string, def: CommandDef, args: string[]): string {
+  // Special handling for claude command
+  if (cmd === 'claude') {
+    return buildClaudeDescription(args)
+  }
+
   let desc = def.description
 
   // Add context based on arguments
@@ -115,6 +120,40 @@ function buildDescription(_cmd: string, def: CommandDef, args: string[]): string
   }
 
   return desc
+}
+
+/**
+ * Build description specifically for the claude command
+ */
+function buildClaudeDescription(args: string[]): string {
+  // Check for specific flags
+  const hasHelp = args.some(a => a === '--help' || a === '-h')
+  const hasVersion = args.some(a => a === '--version' || a === '-v')
+  const hasContinue = args.some(a => a === '-c' || a === '--continue')
+  const hasResume = args.some(a => a === '-r' || a === '--resume')
+  const hasPrint = args.some(a => a === '-p' || a === '--print')
+
+  if (hasHelp) return 'Show Claude Code help and available options'
+  if (hasVersion) return 'Show installed Claude Code version'
+  if (hasContinue) return 'Continue your last Claude conversation'
+  if (hasResume) return 'Resume a specific Claude conversation'
+
+  // Check for prompt argument (non-flag argument)
+  const promptArg = args.find(a => !a.startsWith('-'))
+  if (promptArg) {
+    const truncated = promptArg.length > 50 ? promptArg.substring(0, 50) + '...' : promptArg
+    if (hasPrint) {
+      return `Ask Claude (print mode): "${truncated}"`
+    }
+    return `Ask Claude a one-off question: "${truncated}"`
+  }
+
+  // Default: starting interactive session
+  if (args.length === 0) {
+    return 'Start an interactive Claude session in this directory'
+  }
+
+  return 'Start Claude Code AI assistant'
 }
 
 /**

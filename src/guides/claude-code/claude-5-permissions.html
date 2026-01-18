@@ -1,0 +1,102 @@
+<h2>Understanding Permissions</h2>
+
+<p>
+  Claude Code asks for permission before making changes.
+  This keeps you in control of what happens to your code.
+</p>
+
+<section>
+  <h3>The Permission Prompt</h3>
+  <p>
+    When Claude wants to do something that changes files or runs commands,
+    you'll see a prompt asking for approval. You can:
+  </p>
+  <ul>
+    <li><strong>Allow</strong> — Let Claude proceed with this action</li>
+    <li><strong>Deny</strong> — Stop this action from happening</li>
+    <li><strong>Allow All</strong> — Trust this type of action for the session</li>
+  </ul>
+</section>
+
+<section>
+  <h3>What Requires Permission</h3>
+  <div class="safety-item">
+    <span class="safety-dot moderate"></span>
+    <span>Writing or editing files</span>
+  </div>
+  <div class="safety-item">
+    <span class="safety-dot moderate"></span>
+    <span>Running terminal commands</span>
+  </div>
+  <div class="safety-item">
+    <span class="safety-dot dangerous"></span>
+    <span>Commands that could have wide impact (like <code>rm -rf</code>)</span>
+  </div>
+</section>
+
+<section>
+  <h3>What Doesn't Require Permission</h3>
+  <div class="safety-item">
+    <span class="safety-dot safe"></span>
+    <span>Reading files</span>
+  </div>
+  <div class="safety-item">
+    <span class="safety-dot safe"></span>
+    <span>Searching for files or content</span>
+  </div>
+  <div class="safety-item">
+    <span class="safety-dot safe"></span>
+    <span>Looking up documentation online</span>
+  </div>
+  <p>
+    Read-only operations are generally allowed without prompting.
+  </p>
+</section>
+
+<section>
+  <h3>When to Deny</h3>
+  <p>
+    Say no when:
+  </p>
+  <ul>
+    <li>You want to review the change first</li>
+    <li>The action doesn't match what you asked for</li>
+    <li>You want to try a different approach</li>
+    <li>You're not sure what the command does</li>
+  </ul>
+  <p>
+    It's always okay to deny and ask Claude to explain first.
+  </p>
+</section>
+
+<section>
+  <h3>Trusting Actions</h3>
+  <p>
+    If you're doing repetitive work, you can allow entire categories:
+  </p>
+  <ul>
+    <li>"Allow all file edits" — Useful when refactoring</li>
+    <li>"Allow all bash commands" — Useful for build/test cycles</li>
+  </ul>
+  <p>
+    These permissions last only for your current session.
+  </p>
+</section>
+
+<section>
+  <h3>Safety Net: Git</h3>
+  <p>
+    Always work in a git repository. If something goes wrong:
+  </p>
+  <div class="command-example">
+    <code>git diff</code>
+    <p>See what changed</p>
+  </div>
+  <div class="command-example">
+    <code>git checkout .</code>
+    <p>Undo all uncommitted changes</p>
+  </div>
+  <p>
+    Commit before big changes so you have a restore point.
+  </p>
+</section>

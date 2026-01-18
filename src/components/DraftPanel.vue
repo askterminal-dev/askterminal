@@ -2,11 +2,13 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useTerminalStore } from '../stores/terminal'
 import { useSettingsStore } from '../stores/settings'
+import { useClaudeStore } from '../stores/claude'
 import { parseCommand, getKnownCommands, type CommandInfo } from '../services/CommandParser'
 import ConfirmDialog from './ConfirmDialog.vue'
 
 const terminalStore = useTerminalStore()
 const settingsStore = useSettingsStore()
+const claudeStore = useClaudeStore()
 const inputRef = ref<HTMLInputElement | null>(null)
 
 const emit = defineEmits<{
@@ -21,6 +23,40 @@ const pendingCommand = ref('')
 
 // Suggested commands for empty state
 const suggestedCommands = ['ls', 'pwd', 'cd ~', 'echo "hello"', 'cat', 'mkdir']
+
+// Tool explanations for Claude running mode
+const toolExplanations: Record<string, string> = {
+  Read: 'Reading a file',
+  Write: 'Writing a file',
+  Edit: 'Editing a file',
+  Bash: 'Running a command',
+  Glob: 'Finding files',
+  Grep: 'Searching content',
+  WebFetch: 'Fetching a URL',
+  WebSearch: 'Searching the web',
+  Task: 'Running a subtask',
+  TodoWrite: 'Tracking tasks'
+}
+
+// Tool color classes for visual distinction
+const toolColors: Record<string, string> = {
+  Read: 'tool-read',
+  Write: 'tool-write',
+  Edit: 'tool-edit',
+  Bash: 'tool-bash',
+  Glob: 'tool-glob',
+  Grep: 'tool-grep',
+  WebFetch: 'tool-web',
+  WebSearch: 'tool-web',
+  Task: 'tool-task',
+  TodoWrite: 'tool-task'
+}
+
+// Computed tool color class
+const toolColorClass = computed(() => {
+  const tool = claudeStore.currentTool
+  return tool ? toolColors[tool] || '' : ''
+})
 
 // Parse the current command
 const commandInfo = computed<CommandInfo | null>(() => {
@@ -518,6 +554,55 @@ watch(inputRef, (el) => {
       <p class="text-gray-400 text-xs mt-3">Press keys or click buttons to navigate</p>
     </div>
 
+    <!-- Claude Running Mode -->
+    <div v-else-if="claudeStore.isClaudeSession" class="claude-running-mode">
+      <div class="running-header">
+        <div class="running-title">
+          <span class="running-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+          </span>
+          <span>Claude is running</span>
+        </div>
+        <button
+          @click="sendInterrupt"
+          class="stop-btn"
+          title="Send Ctrl+C to interrupt Claude"
+        >
+          Stop
+        </button>
+      </div>
+
+      <!-- Current Activity Display -->
+      <div class="running-activity">
+        <!-- Thinking State -->
+        <div v-if="claudeStore.isThinking" class="activity-state thinking">
+          <span class="spinner"></span>
+          <span class="state-text">Thinking...</span>
+        </div>
+
+        <!-- Tool Activity -->
+        <div v-else-if="claudeStore.currentTool" class="activity-state tool">
+          <span class="tool-badge" :class="toolColorClass">{{ claudeStore.currentTool }}</span>
+          <span v-if="settingsStore.skillLevel === 'beginner'" class="tool-explanation">
+            {{ toolExplanations[claudeStore.currentTool] }}
+          </span>
+          <span v-if="claudeStore.currentActivity?.description" class="tool-detail">
+            {{ claudeStore.currentActivity.description }}
+          </span>
+        </div>
+
+        <!-- Idle/Waiting State -->
+        <div v-else class="activity-state idle">
+          <span class="state-text">Waiting for response...</span>
+        </div>
+      </div>
+
+      <p class="running-hint">Claude has control of the terminal. Click Stop to interrupt.</p>
+    </div>
+
     <!-- Normal Command Input Mode -->
     <template v-else>
       <!-- Command Input Row -->
@@ -765,5 +850,149 @@ watch(inputRef, (el) => {
 
 .interactive-controls:focus {
   outline: none;
+}
+
+/* Claude Running Mode */
+.claude-running-mode {
+  padding: 4px 0;
+}
+
+.running-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.running-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #5b21b6;
+}
+
+.running-icon {
+  display: flex;
+  color: #7c3aed;
+}
+
+.stop-btn {
+  padding: 6px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.stop-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.running-activity {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border: 1px solid #ddd6fe;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.activity-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.activity-state.thinking .spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ddd6fe;
+  border-top-color: #7c3aed;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.activity-state .state-text {
+  font-size: 13px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.activity-state.idle .state-text {
+  color: #9ca3af;
+}
+
+.tool-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tool-read {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.tool-write {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.tool-edit {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.tool-bash {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.tool-glob, .tool-grep {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.tool-web {
+  background: #cffafe;
+  color: #0e7490;
+}
+
+.tool-task {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+
+.tool-explanation {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.tool-detail {
+  font-size: 11px;
+  color: #9ca3af;
+  font-family: 'Menlo', 'Monaco', monospace;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.running-hint {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #9ca3af;
 }
 </style>
