@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useUIStore } from '../stores/ui'
 
 const uiStore = useUIStore()
@@ -19,6 +19,11 @@ watch(localNotes, (newValue) => {
   saveTimeout = setTimeout(() => {
     uiStore.setUserNotes(newValue)
   }, 500)
+})
+
+// Clean up timeout on unmount to prevent memory leak
+onUnmounted(() => {
+  if (saveTimeout) clearTimeout(saveTimeout)
 })
 
 function clearNotes() {

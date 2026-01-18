@@ -214,12 +214,15 @@ export const useClaudeStore = defineStore('claude', () => {
       const todoPattern = /\[?(pending|in_progress|completed)\]?\s*(.+)/gi
       const matches = [...clean.matchAll(todoPattern)]
       if (matches.length > 0) {
-        const parsedTodos: TodoItem[] = matches.map(m => ({
-          content: m[2].trim().substring(0, 60),
-          status: m[1].toLowerCase().replace('_', '_') as TodoItem['status'],
-          activities: [],
-          collapsed: false
-        }))
+        const parsedTodos: TodoItem[] = matches.map(m => {
+          const rawContent = m[2].trim()
+          return {
+            content: rawContent.length > 60 ? rawContent.substring(0, 60) + '...' : rawContent,
+            status: m[1].toLowerCase() as TodoItem['status'],
+            activities: [],
+            collapsed: false
+          }
+        })
         updateTodos(parsedTodos)
       }
     }

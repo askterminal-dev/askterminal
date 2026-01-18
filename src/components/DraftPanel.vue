@@ -587,7 +587,7 @@ watch(inputRef, (el) => {
         <div v-else-if="claudeStore.currentTool" class="activity-state tool">
           <span class="tool-badge" :class="toolColorClass">{{ claudeStore.currentTool }}</span>
           <span v-if="settingsStore.skillLevel === 'beginner'" class="tool-explanation">
-            {{ toolExplanations[claudeStore.currentTool] }}
+            {{ toolExplanations[claudeStore.currentTool] ?? 'Claude is using a tool.' }}
           </span>
           <span v-if="claudeStore.currentActivity?.description" class="tool-detail">
             {{ claudeStore.currentActivity.description }}

@@ -54,10 +54,10 @@ function switchTab(tab: InfoPanelTab) {
 }
 
 // Tab configuration
-const tabs: Array<{ id: InfoPanelTab; label: string; icon: string }> = [
-  { id: 'guides', label: 'Guides', icon: 'book' },
-  { id: 'activity', label: 'Activity', icon: 'activity' },
-  { id: 'notes', label: 'Notes', icon: 'edit' }
+const tabs: Array<{ id: InfoPanelTab; label: string }> = [
+  { id: 'guides', label: 'Guides' },
+  { id: 'activity', label: 'Activity' },
+  { id: 'notes', label: 'Notes' }
 ]
 </script>
 
